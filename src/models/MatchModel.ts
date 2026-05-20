@@ -52,8 +52,21 @@ class MatchModel {
             player.currentWpm = currentWpm;
         }
     };
+    getPlayer(playerId: string) {
+        return this._players.get(playerId);
+    }
+    finalizePlayer(playerId: string, finalWpm: number) {
+        const player = this._players.get(playerId);
+        if (player) player.finalWpm = finalWpm;
+    }
 
+    get matchId() {
+        return this._matchId;
+    }
 
+    get players() {
+        return this._players;
+    }
 }
 
 export default MatchModel;
