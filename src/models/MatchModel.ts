@@ -1,7 +1,8 @@
 type MatchPlayer = {
     playerId: string;
-    input: string;
-    errorCount: number;
+    cursorIndex: number;
+    totalKeystrokes: number;
+    errors: number;
     currentWpm: number;
     finalWpm: number;
 }
@@ -44,11 +45,12 @@ class MatchModel {
         this._players.set(player.playerId, player);
     }
 
-    updatePlayerStats(playerId: string, input: string, errorCount: number, currentWpm: number) {
+    updatePlayerStats(playerId: string, idx: number, keyStrokes: number, errorCount: number, currentWpm: number) {
         const player = this._players.get(playerId);
         if (player) {
-            player.input = input;
-            player.errorCount = errorCount;
+            player.cursorIndex = idx;
+            player.totalKeystrokes = keyStrokes;
+            player.errors = errorCount;
             player.currentWpm = currentWpm;
         }
     };

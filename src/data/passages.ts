@@ -1,3 +1,5 @@
+// Fallback passages if Quotable API is down
+
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export interface Passage {

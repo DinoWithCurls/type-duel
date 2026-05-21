@@ -1,6 +1,6 @@
 import PlayerModel from "./PlayerModel";
 import MatchModel from "./MatchModel";
-type GamePhase = 'lobby' | 'matchmaking' | 'in-game' | 'post-game';
+type GamePhase = 'idle' | 'countdown' | 'playing' | 'results';
 
 class GameModel {
     private _phase: GamePhase;
@@ -9,7 +9,7 @@ class GameModel {
     private _matchHistory: MatchModel[];
 
     constructor() {
-        this._phase = 'lobby';
+        this._phase = 'idle';
         this._players = [];
         this._currentMatch = null;
         this._matchHistory = [];
@@ -20,7 +20,7 @@ class GameModel {
         this._players.push(player);
     }
     endMatch() {
-        this._phase = 'post-game';
+        this._phase = 'results';
         this._players.forEach(player => {
             const matchPlayer = this._currentMatch!.getPlayer(player.player.id);
             if (matchPlayer) {
@@ -34,12 +34,13 @@ class GameModel {
 
     createMatch(duration: number) {
         this._currentMatch = new MatchModel(duration);
-        this._phase = 'matchmaking';
+        this._phase = 'countdown';
         this._players.forEach(player => {
             this._currentMatch!.addPlayer({
                 playerId: player.player.id,
-                input: '',
-                errorCount: 0,
+                cursorIndex: 0,
+                totalKeystrokes: 0,
+                errors: 0,
                 currentWpm: 0,
                 finalWpm: 0
             })
@@ -58,8 +59,8 @@ class GameModel {
                 id: player.player.id,
                 name: player.player.name,
                 finalWpm: matchPlayer?.finalWpm ?? 0,
-                errorCount: matchPlayer?.errorCount ?? 0,
-                input: matchPlayer?.input ?? ''
+                errorCount: matchPlayer?.errors ?? 0,
+                cursorIndex: matchPlayer?.cursorIndex ?? 0
             }
         });
         return {
@@ -70,8 +71,8 @@ class GameModel {
                     return ({
                         name: this._players.find(p => p.player.id === player.playerId)?.player.name ?? 'Unknown',
                         finalWpm: player.finalWpm,
-                        errorCount: player.errorCount,
-                        input: player.input
+                        errorCount: player.errors,
+                        cursorIndex: player.cursorIndex
                     })
                 })
             }))
