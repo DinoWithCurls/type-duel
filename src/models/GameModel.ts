@@ -18,7 +18,14 @@ class GameModel {
     addPlayer(name: string) {
         let player = new PlayerModel(name);
         this._players.push(player);
+        return player.player.id;
     }
+
+    startMatch() {
+        this.updatePhase('playing');
+        this._currentMatch?.startMatch();
+    }
+
     endMatch() {
         this._phase = 'results';
         this._players.forEach(player => {
@@ -32,8 +39,8 @@ class GameModel {
         this._currentMatch = null;
     }
 
-    createMatch(duration: number) {
-        this._currentMatch = new MatchModel(duration);
+    createMatch() {
+        this._currentMatch = new MatchModel();
         this._phase = 'countdown';
         this._players.forEach(player => {
             this._currentMatch!.addPlayer({
@@ -45,6 +52,22 @@ class GameModel {
                 finalWpm: 0
             })
         })
+    }
+
+    setMatchPassage(id: string, text: string) {
+        this._currentMatch.setPassage(id, text);
+    }
+
+    getPassage() {
+        return this._currentMatch.getPassage();
+    }
+
+    getPlayerStats(playerId) {
+        return this._currentMatch?.getPlayer(playerId);
+    }
+
+    updatePlayerStats(playerId: string, idx: number, keyStrokes: number, errorCount: number, currentWpm: number) {
+        this._currentMatch?.updatePlayerStats(playerId, idx, keyStrokes, errorCount, currentWpm);
     }
 
     updatePhase(phase: GamePhase) {
@@ -77,6 +100,14 @@ class GameModel {
                 })
             }))
         }
+    }
+
+    getElapsedTime() {
+        return this._currentMatch?.getElapsedTime() ?? 0;
+    }
+
+    getOpponentId(localPlayerId: string) {
+        return this._players.find(p => p.player.id != localPlayerId)?.player.id ?? null;
     }
 }
 

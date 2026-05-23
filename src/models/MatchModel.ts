@@ -7,6 +7,14 @@ type MatchPlayer = {
     finalWpm: number;
 }
 
+export type OpponentUpdate = {
+    cursorIndex: number;
+    totalKeystrokes: number;
+    currentWpm: number;
+    errors: number;
+    
+}
+
 type MatchStatus = 'waiting' | 'ongoing' | 'finished';
 
 class MatchModel {
@@ -18,7 +26,7 @@ class MatchModel {
     private _players: Map<string, MatchPlayer>;
     private _startTime: number | null = null;
 
-    constructor(duration: number) {
+    constructor(duration: number = 120) {
         this._matchId = crypto.randomUUID();
         this._duration = duration;
         this._players = new Map<string, MatchPlayer>();
@@ -39,6 +47,10 @@ class MatchModel {
     setPassage(id: string, text: string) {
         this._passageId = id;
         this._passage = text;
+    }
+
+    getPassage() {
+        return this._passage;
     }
 
     addPlayer(player: MatchPlayer) { 
@@ -68,6 +80,11 @@ class MatchModel {
 
     get players() {
         return this._players;
+    }
+
+    getElapsedTime() {
+        if (!this._startTime) return 0;
+        return (Date.now() - this._startTime) / 1000;
     }
 }
 

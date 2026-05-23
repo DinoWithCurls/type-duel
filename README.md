@@ -70,7 +70,7 @@ typeduel/
 
 ### Game Phases
 
-`lobby` → `matchmaking` → `in-game` → `post-game`
+`idle` → `countdown` → `playing` → `results`
 
 ### Winner Criteria
 
@@ -98,18 +98,19 @@ typeduel/
 ### ✅ Done
 - [x] Project scaffolded (Vite + vanilla-ts template)
 - [x] Folder structure set up
-- [x] `passages.ts` — passage data with difficulty types
+- [x] `passages.ts` — passage data with difficulty types (fallback)
 - [x] `PlayerModel.ts` — id, name, averageWpm, updateStats()
-- [x] `MatchModel.ts` — matchId, passage, duration, startTime, player stats map, timer
+- [x] `MatchModel.ts` — matchId, passage, player stats map, timer, elapsedTime
 - [x] `GameModel.ts` — phases, players, match lifecycle, getResults()
+- [x] `GameController.ts` — match flow, keystroke handling, passage fetch, opponent updates
 
 ### 🔄 In Progress
-- [ ] `GameController.ts`
+- [ ] `GameView.ts`
 
 ### 📋 Pending
-- [ ] `GameView.ts`
 - [ ] `ResultsView.ts`
 - [ ] `main.ts` — app bootstrap
 - [ ] Styles
 - [ ] localStorage integration (leaderboard)
+- [ ] WebSocket integration (server + client)
 - [ ] End-to-end testing
