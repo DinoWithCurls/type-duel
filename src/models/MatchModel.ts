@@ -1,4 +1,4 @@
-type MatchPlayer = {
+export type MatchPlayer = {
     playerId: string;
     cursorIndex: number;
     totalKeystrokes: number;
