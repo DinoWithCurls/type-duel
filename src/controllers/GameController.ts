@@ -16,6 +16,25 @@ class GameController {
         this._view = view;
     }
 
+    init() {
+        this._view.renderHome();
+        this._view.onCreateMatch((name) => {
+            const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            this.addPlayer(name);
+            this.createMatch();
+            this._view.renderLobby(roomCode);
+        });
+        this._view.onViewHistory(() => {});
+    }
+
+    handleOpponentJoined(opponentName: string) {
+        this._model.addPlayer(opponentName);
+        this._view.renderOpponentJoined(opponentName);
+        this._view.onStartMatch(() => {
+            this.startCountdown();
+        })
+    }
+
     createMatch() {
         this._model.createMatch();
     }
