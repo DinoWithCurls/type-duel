@@ -114,3 +114,14 @@ typeduel/
 - [ ] localStorage integration (leaderboard)
 - [ ] WebSocket integration (server + client)
 - [ ] End-to-end testing
+
+---
+
+## TODOs
+
+- [ ] Replace stubbed room code generation in `GameController.init()` with WebSocket server response
+- [ ] Implement WebSocket client in `GameController` — connect, send keystroke updates, receive opponent updates
+- [ ] Build WebSocket server (`server/` folder) — room management, progress broadcast, finish detection
+- [ ] Add single player mode with ghost opponent
+- [ ] Add localStorage leaderboard
+- [ ] Add comments

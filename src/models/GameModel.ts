@@ -106,6 +106,10 @@ class GameModel {
         return this._currentMatch?.getElapsedTime() ?? 0;
     }
 
+    getTimeRemaining() {
+        return this._currentMatch.timeRemaining();
+    }
+
     getOpponentId(localPlayerId: string) {
         return this._players.find(p => p.player.id != localPlayerId)?.player.id ?? null;
     }
