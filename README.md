@@ -124,3 +124,4 @@ typeduel/
 - [ ] Build WebSocket server (`server/` folder) — room management, progress broadcast, finish detection
 - [ ] Add single player mode with ghost opponent
 - [ ] Add localStorage leaderboard
+- [ ] Add comments

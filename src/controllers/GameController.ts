@@ -76,6 +76,9 @@ class GameController {
             await sleep(1000);
         }
         this._model.startMatch();
+        const passage = this._model.getPassage();
+        this._view.renderMatch(passage);
+        this._view.onKeystroke(e => this.handleKeystroke(e));
     }
 
     endMatch() { 
@@ -102,7 +105,20 @@ class GameController {
         const currWpm = elapsed > 0 ? (currCursorIdx / 5) / (elapsed / 60) : 0;
         newKeyCount++;
         this._model.updatePlayerStats(this._localPlayer, Math.max(0, currCursorIdx), newKeyCount, currErrorCount, currWpm);
-        if (currCursorIdx == passage.length) this.endMatch();
+        if (currCursorIdx == passage.length) {
+            this.endMatch();
+            return;
+        };
+        // TODO: Handle single player mode - ghost opponent
+        const opponentId = this._model.getOpponentId(this._localPlayer);
+        if (!opponentId) return;
+        const opponentStats = this._model.getPlayerStats(opponentId);
+
+        this._view.updateMatch(
+            this._model.getPlayerStats(this._localPlayer), 
+            opponentStats,
+            this._model.getTimeRemaining()
+        )
     }
 
     handleOpponentUpdate(data: OpponentUpdate) {
