@@ -106,8 +106,8 @@ typeduel/
 - [x] `GameView.ts` — home, lobby, countdown, match screens, keystroke listener
 - [x] `ResultsView.ts` — results screen, history, rematch, back navigation
 
-### 🔄 In Progress
-- [ ] `main.ts` — app bootstrap
+### ✅ Done (continued)
+- [x] `main.ts` — bootstraps app, wires Model, View, Controller together
 
 ### 📋 Pending
 - [ ] Styles
