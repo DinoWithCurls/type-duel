@@ -103,16 +103,18 @@ typeduel/
 - [x] `MatchModel.ts` — matchId, passage, player stats map, timer, elapsedTime
 - [x] `GameModel.ts` — phases, players, match lifecycle, getResults()
 - [x] `GameController.ts` — match flow, keystroke handling, passage fetch, opponent updates
+- [x] `GameView.ts` — home, lobby, countdown, match screens, keystroke listener
+- [x] `ResultsView.ts` — results screen, history, rematch, back navigation
 
 ### 🔄 In Progress
-- [ ] `GameView.ts`
+- [ ] `main.ts` — app bootstrap
 
 ### 📋 Pending
-- [ ] `ResultsView.ts`
-- [ ] `main.ts` — app bootstrap
 - [ ] Styles
 - [ ] localStorage integration (leaderboard)
 - [ ] WebSocket integration (server + client)
+- [ ] Single player mode (ghost opponent)
+- [ ] Comments and code documentation
 - [ ] End-to-end testing
 
 ---
@@ -124,4 +126,3 @@ typeduel/
 - [ ] Build WebSocket server (`server/` folder) — room management, progress broadcast, finish detection
 - [ ] Add single player mode with ghost opponent
 - [ ] Add localStorage leaderboard
-- [ ] Add comments

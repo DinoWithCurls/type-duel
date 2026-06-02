@@ -2,6 +2,24 @@ import PlayerModel from "./PlayerModel";
 import MatchModel from "./MatchModel";
 type GamePhase = 'idle' | 'countdown' | 'playing' | 'results';
 
+export type MatchHistory = {
+    matchId: string;
+    players: {
+        name: string;
+        finalWpm: number;
+        errorCount: number;
+        cursorIndex: number;
+    }[];
+}
+
+export type PlayerResult = {
+    id: string;
+    name: string;
+    finalWpm: number;
+    errorCount: number;
+    cursorIndex: number;
+    totalKeystrokes: number;
+}
 class GameModel {
     private _phase: GamePhase;
     private _players: PlayerModel[];
@@ -55,14 +73,14 @@ class GameModel {
     }
 
     setMatchPassage(id: string, text: string) {
-        this._currentMatch.setPassage(id, text);
+        this._currentMatch?.setPassage(id, text);
     }
 
     getPassage() {
-        return this._currentMatch.getPassage();
+        return this._currentMatch?.getPassage();
     }
 
-    getPlayerStats(playerId) {
+    getPlayerStats(playerId: string) {
         return this._currentMatch?.getPlayer(playerId);
     }
 
@@ -75,6 +93,7 @@ class GameModel {
     }
 
     getResults() {
+        if (this._matchHistory.length === 0) return { playerStats: [], matchHistory: []};
         const lastMatch = this._matchHistory[this._matchHistory.length - 1];
         const playerStats = this._players.map(player => {
             const matchPlayer = lastMatch.getPlayer(player.player.id);
@@ -83,7 +102,8 @@ class GameModel {
                 name: player.player.name,
                 finalWpm: matchPlayer?.finalWpm ?? 0,
                 errorCount: matchPlayer?.errors ?? 0,
-                cursorIndex: matchPlayer?.cursorIndex ?? 0
+                cursorIndex: matchPlayer?.cursorIndex ?? 0,
+                totalKeystrokes: matchPlayer?.totalKeystrokes ?? 0
             }
         });
         return {
@@ -107,7 +127,7 @@ class GameModel {
     }
 
     getTimeRemaining() {
-        return this._currentMatch.timeRemaining();
+        return this._currentMatch?.timeRemaining();
     }
 
     getOpponentId(localPlayerId: string) {
