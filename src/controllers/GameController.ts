@@ -1,5 +1,6 @@
 import GameModel from "../models/GameModel";
 import GameView from "../views/GameView";
+import ResultsView from "../views/ResultsView";
 import { type OpponentUpdate } from "../models/MatchModel";
 import { passages } from "../data/passages";
 
@@ -10,10 +11,12 @@ const ignoredKeyboardKeys = ['Shift', 'Control', 'Alt', 'Meta', 'Tab', 'CapsLock
 class GameController {
     private _model: GameModel;
     private _view: GameView;
+    private _resultsView: ResultsView;
     private _localPlayer: string | null = null;
-    constructor(model: GameModel, view: GameView) {
+    constructor(model: GameModel, view: GameView, resultsView: ResultsView) {
         this._model = model;
         this._view = view;
+        this._resultsView = resultsView;
     }
 
     init() {
@@ -24,7 +27,10 @@ class GameController {
             this.createMatch();
             this._view.renderLobby(roomCode);
         });
-        this._view.onViewHistory(() => {});
+        this._view.onViewHistory(() => {
+            const results = this._model.getResults();
+            this._resultsView.renderHistory(results.matchHistory);
+        });
     }
 
     handleOpponentJoined(opponentName: string) {
@@ -83,6 +89,18 @@ class GameController {
 
     endMatch() { 
         this._model.endMatch();
+        const results = this._model.getResults();
+        this._resultsView.renderResults(results.playerStats, results.matchHistory);
+        this._resultsView.onRematch(() => {
+            this.createMatch();
+            this.startCountdown();
+        });
+        this._resultsView.onViewHistory(() => {
+            this._resultsView.renderHistory(results.matchHistory);
+            this._resultsView.onBackToResults(() => {
+                this._resultsView.renderResults(results.playerStats, results.matchHistory);
+            });
+        })
     }
 
     handleKeystroke(key: KeyboardEvent) { 
@@ -130,6 +148,7 @@ class GameController {
     getResults() {
         return this._model.getResults();
     }
+
 }
 
 
