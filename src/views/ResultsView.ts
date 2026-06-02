@@ -8,21 +8,27 @@ class ResultsView {
     }
 
     onRematch(callback: () => void) {
-        const btn = this._root?.querySelector('#rematch-button');
-        btn?.addEventListener('click', () => callback());
+        const btn = this._root?.querySelector('#rematch-button') as HTMLButtonElement;
+        if (btn) {
+            btn.onclick = () => callback();
+        }
     }
 
     onViewHistory(callback: () => void) {
-        const btn = this._root?.querySelector('#view-history-button');
-        btn?.addEventListener('click', () => callback());
+        const btn = this._root?.querySelector('#view-history-button') as HTMLButtonElement;
+        if (btn) {
+            btn.onclick = () => callback();
+        }
     }
 
     onBackToResults(callback: () => void) {
-        const btn = this._root?.querySelector('#return-button');
-        btn?.addEventListener('click', () => callback());
+        const btn = this._root?.querySelector('#return-button') as HTMLButtonElement;
+        if (btn) {
+            btn.onclick = () => callback();
+        }
     }
 
-    renderResults(playerStats: PlayerResult[], matchHistory: MatchHistory[]) {
+    renderResults(playerStats: PlayerResult[]) {
         const [player1, player2] = playerStats;
         
         const isTie = player1.cursorIndex === player2.cursorIndex && 

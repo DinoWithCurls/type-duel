@@ -90,7 +90,7 @@ class GameController {
     endMatch() { 
         this._model.endMatch();
         const results = this._model.getResults();
-        this._resultsView.renderResults(results.playerStats, results.matchHistory);
+        this._resultsView.renderResults(results.playerStats);
         this._resultsView.onRematch(() => {
             this.createMatch();
             this.startCountdown();
@@ -98,7 +98,7 @@ class GameController {
         this._resultsView.onViewHistory(() => {
             this._resultsView.renderHistory(results.matchHistory);
             this._resultsView.onBackToResults(() => {
-                this._resultsView.renderResults(results.playerStats, results.matchHistory);
+                this._resultsView.renderResults(results.playerStats);
             });
         })
     }

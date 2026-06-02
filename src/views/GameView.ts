@@ -17,26 +17,28 @@ class GameView {
         `
     }
     onCreateMatch(callback: (name: string) => void) {
-        const btn = this._root.querySelector('#create-match');
+        const btn = this._root.querySelector('#create-match') as HTMLButtonElement;
         const input = this._root.querySelector('#player-name') as HTMLInputElement;
-        if (!input.value.trim()) return;
-        btn?.addEventListener('click', () => {
-            callback(input.value);
-        })
+        if (btn) {
+            btn.onclick = () => {
+                if (!input.value.trim()) return;
+                callback(input.value)
+            }
+        }
     }
 
     onStartMatch(callback: () => void) {
-        const btn = this._root.querySelector('#start-match');
-        btn?.addEventListener('click', () => {
-            callback();
-        })
+        const btn = this._root.querySelector('#start-match') as HTMLButtonElement;
+        if (btn) {
+            btn.onclick = () => callback();
+        }
     }
 
     onViewHistory(callback: () => void) {
-        const btn = this._root.querySelector('#view-history');
-        btn?.addEventListener('click', () => {
-            callback();
-        });
+        const btn = this._root.querySelector('#view-history') as HTMLButtonElement;
+        if (btn) {
+            btn.onclick = () => callback();
+        }
     }
 
     onKeystroke(callback: (e: KeyboardEvent) => void) {
@@ -83,7 +85,7 @@ class GameView {
                     <div id="local-stats">Your stats</div>
                     <div id="opponent-stats">Opponent stats</div>
                 </div>
-                <div id="time-remaining-container></div>
+                <div id="time-remaining-container"></div>
                 <div id="passage">
                     <span id="typed"></span>
                     <span id="untyped">${passage}</span>
