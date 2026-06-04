@@ -87,8 +87,9 @@ class GameView {
                 </div>
                 <div id="time-remaining-container"></div>
                 <div id="passage">
-                    <span id="typed"></span>
-                    <span id="untyped">${passage}</span>
+                    <span id="typed" style="color: blue; font-weight: bold;"></span>
+                    <span id="cursor-char" style="border-bottom: 2px solid black; background-color: #e0e0e0;"></span>
+                    <span id="untyped" style="color: grey;">${passage}</span>
                 </div>
             </div>
         `;
@@ -98,19 +99,20 @@ class GameView {
         const timeRemainingHTML = this._root.querySelector('#time-remaining-container');
         const localStatsHTML = this._root.querySelector('#local-stats');
         const opponentStatsHTML = this._root.querySelector('#opponent-stats');
+        const cursorChar = this._root.querySelector('#cursor-char');
         const typed = this._root.querySelector('#typed');
         const untyped = this._root.querySelector('#untyped');
         
         if(!typed || !untyped || !localStatsHTML || !opponentStatsHTML || !timeRemainingHTML) return;
         
         const fullPassage = typed.textContent + untyped.textContent;
-        
         typed.textContent = fullPassage.slice(0, localStats.cursorIndex);
-        untyped.textContent = fullPassage.slice(localStats.cursorIndex);
+        cursorChar.textContent = fullPassage[localStats.cursorIndex] ?? '';
+        untyped.textContent = fullPassage.slice(localStats.cursorIndex + 1);
         localStatsHTML.innerHTML = `WPM: ${Math.round(localStats.currentWpm)} | Errors: ${localStats.errors}`;
-opponentStatsHTML.innerHTML = `Opponent WPM: ${Math.round(opponentStats.currentWpm)} | Progress: ${opponentStats.cursorIndex} chars`;
+        opponentStatsHTML.innerHTML = `Opponent WPM: ${Math.round(opponentStats.currentWpm)} | Progress: ${opponentStats.cursorIndex} chars`;
         if (timeRemaining > 0) {
-            timeRemainingHTML.innerHTML = `${timeRemaining} seconds left`;
+            timeRemainingHTML.innerHTML = `${Math.round(timeRemaining)} seconds left`;
         } else {
             timeRemainingHTML.innerHTML = `Match over!`;
         }   

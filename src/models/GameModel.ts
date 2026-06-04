@@ -36,6 +36,16 @@ class GameModel {
     addPlayer(name: string) {
         let player = new PlayerModel(name);
         this._players.push(player);
+        if (this._currentMatch) {
+            this._currentMatch.addPlayer({
+                playerId: player.player.id,
+                cursorIndex: 0,
+                totalKeystrokes: 0,
+                errors: 0,
+                currentWpm: 0,
+                finalWpm: 0
+            });
+        }
         return player.player.id;
     }
 
@@ -85,6 +95,7 @@ class GameModel {
     }
 
     updatePlayerStats(playerId: string, idx: number, keyStrokes: number, errorCount: number, currentWpm: number) {
+        const player = this._players.find(p => p.player.id === playerId);
         this._currentMatch?.updatePlayerStats(playerId, idx, keyStrokes, errorCount, currentWpm);
     }
 
