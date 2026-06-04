@@ -13,6 +13,8 @@ class GameController {
     private _view: GameView;
     private _resultsView: ResultsView;
     private _localPlayer: string | null = null;
+    private _timerInterval: ReturnType<typeof setInterval> | null = null;
+
     constructor(model: GameModel, view: GameView, resultsView: ResultsView) {
         this._model = model;
         this._view = view;
@@ -84,10 +86,10 @@ class GameController {
         this._view.renderMatch(passage);
         this._view.onKeystroke(e => this.handleKeystroke(e));
         
-        const timerInterval = setInterval(() => {
+        this._timerInterval = setInterval(() => {
             const timeRemaining = this._model.getTimeRemaining();
             if (timeRemaining <= 0) {
-                clearInterval(timerInterval);
+                clearInterval(this._timerInterval);
                 this.endMatch();
                 return;
             }
@@ -102,6 +104,10 @@ class GameController {
     
 
     endMatch() {
+        if (this._timerInterval) {
+            clearInterval(this._timerInterval);
+            this._timerInterval = null;
+        }
         this._model.endMatch();
         const results = this._model.getResults();
         this._resultsView.renderResults(results.playerStats);

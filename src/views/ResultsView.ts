@@ -50,10 +50,10 @@ class ResultsView {
                 <h1>${isTie ? "It's a tie!!" : winningPlayer.name + " won!"}</h1>
                 <h3>Stats</h3>
                 <div>
-                    ${player1.name} --  ${player1.finalWpm} WPM, ${player1.errorCount} errors, Accuracy: ${getAccuracy(player1)}
+                    ${player1.name} --  ${Math.round(player1.finalWpm)} WPM, ${player1.errorCount} errors, Accuracy: ${getAccuracy(player1)}
                 </div>
                 <div>
-                    ${player2.name} -- ${player2.finalWpm} WPM, ${player2.errorCount} errors, Accuracy: ${getAccuracy(player2)}
+                    ${player2.name} -- ${Math.round(player2.finalWpm)} WPM, ${player2.errorCount} errors, Accuracy: ${getAccuracy(player2)}
                 </div>
             </div>
             <div>

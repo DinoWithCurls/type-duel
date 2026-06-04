@@ -1,6 +1,8 @@
 import { type MatchPlayer } from "../models/MatchModel";
 class GameView {
     private _root: HTMLElement;
+    private _passage: string;
+    private _keystrokeHandler: ((e: KeyboardEvent) => void) | null = null;
 
     constructor(root: HTMLElement) {
         this._root = root;
@@ -42,7 +44,11 @@ class GameView {
     }
 
     onKeystroke(callback: (e: KeyboardEvent) => void) {
-        document.addEventListener('keydown', callback);
+        if (this._keystrokeHandler) {
+            document.removeEventListener('keydown', this._keystrokeHandler);
+        } 
+        this._keystrokeHandler = callback;
+        document.addEventListener('keydown', this._keystrokeHandler);
     }
 
 
@@ -78,6 +84,7 @@ class GameView {
     }
 
     renderMatch(passage: string) {
+        this._passage = passage;
         this._root.innerHTML = `
             <div id="match-container">
                 <div>
@@ -105,10 +112,9 @@ class GameView {
         
         if(!typed || !untyped || !localStatsHTML || !opponentStatsHTML || !timeRemainingHTML) return;
         
-        const fullPassage = typed.textContent + untyped.textContent;
-        typed.textContent = fullPassage.slice(0, localStats.cursorIndex);
-        cursorChar.textContent = fullPassage[localStats.cursorIndex] ?? '';
-        untyped.textContent = fullPassage.slice(localStats.cursorIndex + 1);
+        typed.textContent = this._passage.slice(0, localStats.cursorIndex);
+        cursorChar.textContent = this._passage[localStats.cursorIndex] ?? '';
+        untyped.textContent = this._passage.slice(localStats.cursorIndex + 1);
         localStatsHTML.innerHTML = `WPM: ${Math.round(localStats.currentWpm)} | Errors: ${localStats.errors}`;
         opponentStatsHTML.innerHTML = `Opponent WPM: ${Math.round(opponentStats.currentWpm)} | Progress: ${opponentStats.cursorIndex} chars`;
         if (timeRemaining > 0) {
