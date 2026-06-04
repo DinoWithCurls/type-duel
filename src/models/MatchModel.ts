@@ -36,7 +36,7 @@ class MatchModel {
     timeRemaining() {
         if (!this._startTime) return this._duration;
         let elapsed = (Date.now() - this._startTime) / 1000
-        return this._duration - elapsed;
+        return Math.max(0, this._duration - elapsed);
     }
 
     startMatch() {

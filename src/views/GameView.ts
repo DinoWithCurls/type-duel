@@ -1,6 +1,8 @@
 import { type MatchPlayer } from "../models/MatchModel";
 class GameView {
     private _root: HTMLElement;
+    private _passage: string;
+    private _keystrokeHandler: ((e: KeyboardEvent) => void) | null = null;
 
     constructor(root: HTMLElement) {
         this._root = root;
@@ -17,30 +19,36 @@ class GameView {
         `
     }
     onCreateMatch(callback: (name: string) => void) {
-        const btn = this._root.querySelector('#create-match');
+        const btn = this._root.querySelector('#create-match') as HTMLButtonElement;
         const input = this._root.querySelector('#player-name') as HTMLInputElement;
-        if (!input.value.trim()) return;
-        btn?.addEventListener('click', () => {
-            callback(input.value);
-        })
+        if (btn) {
+            btn.onclick = () => {
+                if (!input.value.trim()) return;
+                callback(input.value)
+            }
+        }
     }
 
     onStartMatch(callback: () => void) {
-        const btn = this._root.querySelector('#start-match');
-        btn?.addEventListener('click', () => {
-            callback();
-        })
+        const btn = this._root.querySelector('#start-match') as HTMLButtonElement;
+        if (btn) {
+            btn.onclick = () => callback();
+        }
     }
 
     onViewHistory(callback: () => void) {
-        const btn = this._root.querySelector('#view-history');
-        btn?.addEventListener('click', () => {
-            callback();
-        });
+        const btn = this._root.querySelector('#view-history') as HTMLButtonElement;
+        if (btn) {
+            btn.onclick = () => callback();
+        }
     }
 
     onKeystroke(callback: (e: KeyboardEvent) => void) {
-        document.addEventListener('keydown', callback);
+        if (this._keystrokeHandler) {
+            document.removeEventListener('keydown', this._keystrokeHandler);
+        } 
+        this._keystrokeHandler = callback;
+        document.addEventListener('keydown', this._keystrokeHandler);
     }
 
 
@@ -76,6 +84,7 @@ class GameView {
     }
 
     renderMatch(passage: string) {
+        this._passage = passage;
         this._root.innerHTML = `
             <div id="match-container">
                 <div>
@@ -83,10 +92,11 @@ class GameView {
                     <div id="local-stats">Your stats</div>
                     <div id="opponent-stats">Opponent stats</div>
                 </div>
-                <div id="time-remaining-container></div>
+                <div id="time-remaining-container"></div>
                 <div id="passage">
-                    <span id="typed"></span>
-                    <span id="untyped">${passage}</span>
+                    <span id="typed" style="color: blue; font-weight: bold;"></span>
+                    <span id="cursor-char" style="border-bottom: 2px solid black; background-color: #e0e0e0;"></span>
+                    <span id="untyped" style="color: grey;">${passage}</span>
                 </div>
             </div>
         `;
@@ -96,19 +106,19 @@ class GameView {
         const timeRemainingHTML = this._root.querySelector('#time-remaining-container');
         const localStatsHTML = this._root.querySelector('#local-stats');
         const opponentStatsHTML = this._root.querySelector('#opponent-stats');
+        const cursorChar = this._root.querySelector('#cursor-char');
         const typed = this._root.querySelector('#typed');
         const untyped = this._root.querySelector('#untyped');
         
         if(!typed || !untyped || !localStatsHTML || !opponentStatsHTML || !timeRemainingHTML) return;
         
-        const fullPassage = typed.textContent + untyped.textContent;
-        
-        typed.textContent = fullPassage.slice(0, localStats.cursorIndex);
-        untyped.textContent = fullPassage.slice(localStats.cursorIndex);
+        typed.textContent = this._passage.slice(0, localStats.cursorIndex);
+        cursorChar.textContent = this._passage[localStats.cursorIndex] ?? '';
+        untyped.textContent = this._passage.slice(localStats.cursorIndex + 1);
         localStatsHTML.innerHTML = `WPM: ${Math.round(localStats.currentWpm)} | Errors: ${localStats.errors}`;
-opponentStatsHTML.innerHTML = `Opponent WPM: ${Math.round(opponentStats.currentWpm)} | Progress: ${opponentStats.cursorIndex} chars`;
+        opponentStatsHTML.innerHTML = `Opponent WPM: ${Math.round(opponentStats.currentWpm)} | Progress: ${opponentStats.cursorIndex} chars`;
         if (timeRemaining > 0) {
-            timeRemainingHTML.innerHTML = `${timeRemaining} seconds left`;
+            timeRemainingHTML.innerHTML = `${Math.round(timeRemaining)} seconds left`;
         } else {
             timeRemainingHTML.innerHTML = `Match over!`;
         }   

@@ -13,6 +13,8 @@ class GameController {
     private _view: GameView;
     private _resultsView: ResultsView;
     private _localPlayer: string | null = null;
+    private _timerInterval: ReturnType<typeof setInterval> | null = null;
+
     constructor(model: GameModel, view: GameView, resultsView: ResultsView) {
         this._model = model;
         this._view = view;
@@ -46,16 +48,16 @@ class GameController {
     }
 
     addPlayer(name: string) {
-        this._localPlayer = this._model.addPlayer(name);   
+        this._localPlayer = this._model.addPlayer(name);
     }
 
     async fetchPassage(retries: number = 3) {
         try {
-            if(retries === 0) {
+            if (retries === 0) {
                 throw new Error('max retries reached, falling back to local passages');
             }
             let response = await fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary');
-            if(!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
             const finResponse = await response.json();
             if (finResponse.extract.length < 100 || finResponse.extract.length > 500) {
@@ -72,12 +74,10 @@ class GameController {
         }
     }
 
-    async startCountdown() { 
-        // update countdown
+    async startCountdown() {
         this._model.updatePhase('countdown');
-        // fetch passages
         await this.fetchPassage();
-        for(let i = 3; i >= 0; i --) {
+        for (let i = 3; i >= 0; i--) {
             this._view.renderCountdown(i);
             await sleep(1000);
         }
@@ -85,12 +85,32 @@ class GameController {
         const passage = this._model.getPassage();
         this._view.renderMatch(passage);
         this._view.onKeystroke(e => this.handleKeystroke(e));
+        
+        this._timerInterval = setInterval(() => {
+            const timeRemaining = this._model.getTimeRemaining();
+            if (timeRemaining <= 0) {
+                clearInterval(this._timerInterval);
+                this.endMatch();
+                return;
+            }
+            const localStats = this._model.getPlayerStats(this._localPlayer);
+            const opponentId = this._model.getOpponentId(this._localPlayer);
+            const opponentStats = opponentId
+                ? this._model.getPlayerStats(opponentId)
+                : { playerId: '', cursorIndex: 0, totalKeystrokes: 0, errors: 0, currentWpm: 0, finalWpm: 0 };
+            if (localStats) this._view.updateMatch(localStats, opponentStats, timeRemaining);
+        }, 1000);
     }
+    
 
-    endMatch() { 
+    endMatch() {
+        if (this._timerInterval) {
+            clearInterval(this._timerInterval);
+            this._timerInterval = null;
+        }
         this._model.endMatch();
         const results = this._model.getResults();
-        this._resultsView.renderResults(results.playerStats, results.matchHistory);
+        this._resultsView.renderResults(results.playerStats);
         this._resultsView.onRematch(() => {
             this.createMatch();
             this.startCountdown();
@@ -98,13 +118,13 @@ class GameController {
         this._resultsView.onViewHistory(() => {
             this._resultsView.renderHistory(results.matchHistory);
             this._resultsView.onBackToResults(() => {
-                this._resultsView.renderResults(results.playerStats, results.matchHistory);
+                this._resultsView.renderResults(results.playerStats);
             });
         })
     }
 
-    handleKeystroke(key: KeyboardEvent) { 
-        if (!this._localPlayer) return;
+    handleKeystroke(key: KeyboardEvent) {
+        if (!this._localPlayer) return
         const passage = this._model.getPassage();
         const pressed = key.key;
         let currentPlayer = this._model.getPlayerStats(this._localPlayer);
@@ -112,7 +132,7 @@ class GameController {
         let newKeyCount = currentPlayer.totalKeystrokes;
         let currCursorIdx = currentPlayer.cursorIndex;
         let currErrorCount = currentPlayer.errors
-        if(pressed == 'Backspace') {
+        if (pressed == 'Backspace') {
             currCursorIdx--;
         } else if (passage[currCursorIdx] == pressed) {
             currCursorIdx++;
@@ -128,12 +148,15 @@ class GameController {
             return;
         };
         // TODO: Handle single player mode - ghost opponent
+        let opponentStats;
         const opponentId = this._model.getOpponentId(this._localPlayer);
-        if (!opponentId) return;
-        const opponentStats = this._model.getPlayerStats(opponentId);
-
+        if (opponentId) {
+            opponentStats = opponentStats = this._model.getPlayerStats(opponentId);
+        } else {
+            opponentStats = { playerId: '', cursorIndex: 0, totalKeystrokes: 0, errors: 0, currentWpm: 0, finalWpm: 0 };
+        }
         this._view.updateMatch(
-            this._model.getPlayerStats(this._localPlayer), 
+            this._model.getPlayerStats(this._localPlayer),
             opponentStats,
             this._model.getTimeRemaining()
         )
@@ -141,7 +164,7 @@ class GameController {
 
     handleOpponentUpdate(data: OpponentUpdate) {
         const opponentPlayerId = this._model.getOpponentId(this._localPlayer);
-        if(!opponentPlayerId) return;
+        if (!opponentPlayerId) return;
         this._model.updatePlayerStats(opponentPlayerId, data.cursorIndex, data.totalKeystrokes, data.errors, data.currentWpm)
     }
 
