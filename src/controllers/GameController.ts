@@ -82,6 +82,14 @@ class GameController {
             await sleep(1000);
         }
         this._model.startMatch();
+        const timerInterval = setInterval(() => {
+            const timeRemaining = this._model.getTimeRemaining();
+            if (timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                this.endMatch();
+            }
+            // update time in view
+        }, 1000);
         const passage = this._model.getPassage();
         this._view.renderMatch(passage);
         this._view.onKeystroke(e => this.handleKeystroke(e));
