@@ -1,8 +1,9 @@
-import GameModel from "../models/GameModel";
+import GameModel, { type MatchHistory, type PlayerResult } from "../models/GameModel";
 import GameView from "../views/GameView";
 import ResultsView from "../views/ResultsView";
-import { type OpponentUpdate } from "../models/MatchModel";
-import { passages } from "../data/passages";
+import { MessageType } from '@shared/types';
+
+
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -14,6 +15,8 @@ class GameController {
     private _resultsView: ResultsView;
     private _localPlayer: string | null = null;
     private _timerInterval: ReturnType<typeof setInterval> | null = null;
+    private _socket: WebSocket | null = null;
+    private _roomCode: string | null = null;
 
     constructor(model: GameModel, view: GameView, resultsView: ResultsView) {
         this._model = model;
@@ -21,14 +24,82 @@ class GameController {
         this._resultsView = resultsView;
     }
 
+    private showResults(playerStats: PlayerResult[], matchHistory: MatchHistory[]) {
+        this._resultsView.renderResults(playerStats);
+        this._resultsView.onRematch(() => {
+            this._socket?.send(JSON.stringify({
+                type: MessageType.REMATCH,
+                roomCode: this._roomCode
+            }))
+        });
+        this._resultsView.onViewHistory(() => {
+            this._resultsView.renderHistory(matchHistory);
+            this._resultsView.onBackToResults(() => {
+                this.showResults(playerStats, matchHistory);
+            });
+        });
+    }
+
     init() {
+        this._socket = new WebSocket('ws://localhost:8080');
+        this._socket.onopen = () => console.log('WebSocket connected');
+        this._socket.onerror = (e) => console.error('websocket error: ', e);
+        this._socket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            switch (message.type) {
+                case MessageType.ROOM_CREATED:
+                    this._roomCode = message.roomCode;
+                    this._view.renderLobby(message.roomCode);
+                    break;
+                case MessageType.OPPONENT_JOINED:
+                    this.handleOpponentJoined(message.opponentName);
+                    break;
+                case MessageType.MATCH_STARTED:
+                    this._model.setMatchPassage('', message.passage);
+                    this.startCountdown();
+                    break;
+                case MessageType.OPPONENT_FINISHED:
+                    const opponentId = this._model.getOpponentId(this._localPlayer);
+                    if (opponentId) {
+                        this._model.updatePlayerStats(
+                            opponentId,
+                            message.cursorIndex,
+                            message.totalKeystrokes,
+                            message.errors,
+                            message.finalWpm
+                        )
+                    }
+                    this.endMatch();
+                    break;
+                case MessageType.REMATCH_START:
+                    this.createMatch();
+                    this._model.setMatchPassage('', message.passage);
+                    this.startCountdown();
+                    break;
+            }
+        }
         this._view.renderHome();
         this._view.onCreateMatch((name) => {
-            const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
             this.addPlayer(name);
             this.createMatch();
-            this._view.renderLobby(roomCode);
+            this._socket?.send(JSON.stringify({
+                type: MessageType.CREATE_ROOM,
+                playerName: name
+            }));
         });
+
+        this._view.onJoinMatch((name, roomCode) => {
+            this.createMatch();
+            this.addPlayer(name);
+            this._roomCode = roomCode;
+            this._view.renderLobby(roomCode);
+            this._socket?.send(JSON.stringify({
+                type: MessageType.JOIN_ROOM,
+                roomCode,
+                playerName: name
+            }))
+        })
+
         this._view.onViewHistory(() => {
             const results = this._model.getResults();
             this._resultsView.renderHistory(results.matchHistory);
@@ -39,7 +110,10 @@ class GameController {
         this._model.addPlayer(opponentName);
         this._view.renderOpponentJoined(opponentName);
         this._view.onStartMatch(() => {
-            this.startCountdown();
+            this._socket?.send(JSON.stringify({
+                type: MessageType.START_MATCH,
+                roomCode: this._roomCode
+            }))
         })
     }
 
@@ -51,32 +125,9 @@ class GameController {
         this._localPlayer = this._model.addPlayer(name);
     }
 
-    async fetchPassage(retries: number = 3) {
-        try {
-            if (retries === 0) {
-                throw new Error('max retries reached, falling back to local passages');
-            }
-            let response = await fetch('https://en.wikipedia.org/api/rest_v1/page/random/summary');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
-            const finResponse = await response.json();
-            if (finResponse.extract.length < 100 || finResponse.extract.length > 500) {
-                await this.fetchPassage(retries - 1);
-            }
-            else {
-                this._model.setMatchPassage(finResponse.pageid.toString(), finResponse.extract)
-            }
-        } catch (err) {
-            console.error(err);
-            let randomIdx = Math.floor(Math.random() * passages.length);
-            let passage = passages[randomIdx];
-            this._model.setMatchPassage(passage.id, passage.text);
-        }
-    }
 
     async startCountdown() {
         this._model.updatePhase('countdown');
-        await this.fetchPassage();
         for (let i = 3; i >= 0; i--) {
             this._view.renderCountdown(i);
             await sleep(1000);
@@ -85,7 +136,7 @@ class GameController {
         const passage = this._model.getPassage();
         this._view.renderMatch(passage);
         this._view.onKeystroke(e => this.handleKeystroke(e));
-        
+
         this._timerInterval = setInterval(() => {
             const timeRemaining = this._model.getTimeRemaining();
             if (timeRemaining <= 0) {
@@ -101,26 +152,26 @@ class GameController {
             if (localStats) this._view.updateMatch(localStats, opponentStats, timeRemaining);
         }, 1000);
     }
-    
+
 
     endMatch() {
+        if (!this._model.isMatchActive()) return;
         if (this._timerInterval) {
             clearInterval(this._timerInterval);
             this._timerInterval = null;
         }
+        const localStats = this._model.getPlayerStats(this._localPlayer);
         this._model.endMatch();
+        this._socket?.send(JSON.stringify({
+            type: MessageType.MATCH_FINISHED,
+            roomCode: this._roomCode,
+            finalWpm: localStats.currentWpm ?? 0, 
+            cursorIndex: localStats.cursorIndex ?? 0,
+            errors: localStats.errors ?? 0,
+            totalKeystrokes: localStats.totalKeystrokes ?? 0
+        }))
         const results = this._model.getResults();
-        this._resultsView.renderResults(results.playerStats);
-        this._resultsView.onRematch(() => {
-            this.createMatch();
-            this.startCountdown();
-        });
-        this._resultsView.onViewHistory(() => {
-            this._resultsView.renderHistory(results.matchHistory);
-            this._resultsView.onBackToResults(() => {
-                this._resultsView.renderResults(results.playerStats);
-            });
-        })
+        this.showResults(results.playerStats, results.matchHistory);
     }
 
     handleKeystroke(key: KeyboardEvent) {
@@ -162,16 +213,9 @@ class GameController {
         )
     }
 
-    handleOpponentUpdate(data: OpponentUpdate) {
-        const opponentPlayerId = this._model.getOpponentId(this._localPlayer);
-        if (!opponentPlayerId) return;
-        this._model.updatePlayerStats(opponentPlayerId, data.cursorIndex, data.totalKeystrokes, data.errors, data.currentWpm)
-    }
-
     getResults() {
         return this._model.getResults();
     }
-
 }
 
 

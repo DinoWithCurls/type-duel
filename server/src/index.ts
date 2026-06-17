@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import RoomManager from './RoomManager.js';
-import { MessageType, WebSocketMessage, ClientMessage, ServerMessage } from './types.js';
+import { MessageType, WebSocketMessage, ClientMessage, ServerMessage } from '../../shared/types.js';
 import { passages } from './passages.js';
 
 function send(ws: WebSocket, message: WebSocketMessage | ClientMessage | ServerMessage) {
@@ -69,15 +69,26 @@ connection.on('connection', (ws: WebSocket) => {
             }
             case 'match_finished': {
                 const room = roomManager.getRoom(message.roomCode);
-                if (!room) {
-                    send(ws, { type: MessageType.ERROR, message: 'Room not found' });
-                    return;
-                }
+                if (!room) return;
                 const opponent = room.players.find(p => p.ws !== ws);
                 if (!opponent) return;
+                send(opponent.ws, { type: MessageType.OPPONENT_FINISHED, opponentName: opponent.name, finalWpm: message.finalWpm, cursorIndex: message.cursorIndex, errors: message.errors, totalKeystrokes: message.totalKeystrokes });
+                room.status = 'ready';
+                break;
+            }
 
-                send(opponent.ws, { type: MessageType.OPPONENT_FINISHED, opponentName: opponent.name });
-                roomManager.removeRoom(message.roomCode);
+            case 'rematch': {
+                const room = roomManager.getRoom(message.roomCode);
+                if (!room) return;
+                room.rematchCount++;
+                if (room.rematchCount === 2) {
+                    room.rematchCount = 0;
+                    room.status = 'ready';
+                    const passage = await fetchPassage() ?? passages[0].text;
+                    room.players.forEach(player => {
+                        send(player.ws, { type: MessageType.REMATCH_START, passage });
+                    });
+                }
                 break;
             }
         }
@@ -88,7 +99,7 @@ connection.on('connection', (ws: WebSocket) => {
         if (!room) return;
         const opponent = room.players.find(p => p.ws !== ws);
         if (!opponent) return;
-        send(opponent.ws, { type: MessageType.MATCH_FINISHED, roomCode: room.code});
+        send(opponent.ws, { type: MessageType.MATCH_FINISHED, roomCode: room.code });
         roomManager.removeRoom(room.code);
     })
 });

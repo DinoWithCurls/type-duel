@@ -133,6 +133,10 @@ class GameModel {
         }
     }
 
+    isMatchActive() {
+        return this._currentMatch !== null;
+    }
+
     getElapsedTime() {
         return this._currentMatch?.getElapsedTime() ?? 0;
     }

@@ -5,6 +5,9 @@
     "lib": ["ES2023", "DOM"],
     "types": ["vite/client"],
     "skipLibCheck": true,
+    "paths": {
+      "@shared/*": ["./shared/*"]
+    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -16,8 +19,8 @@
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
+    "erasableSyntaxOnly": false,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "data"]
+  "include": ["src", "data", "../shared"]
 }

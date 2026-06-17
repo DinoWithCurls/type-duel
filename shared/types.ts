@@ -9,6 +9,8 @@ enum MessageType {
     START_MATCH='start_match',
     OPPONENT_UPDATE='opponent_update',
     OPPONENT_FINISHED='opponent_finished',
+    REMATCH='rematch',
+    REMATCH_START='rematch_start',
     ERROR='error'
 
 }
@@ -66,7 +68,11 @@ interface OpponentUpdateMessage extends PlayerUpdateType {
 
 interface OpponentFinishedMessage {
     type: MessageType.OPPONENT_FINISHED,
-    opponentName: string
+    opponentName: string,
+    finalWpm: number;
+    cursorIndex: number;
+    errors: number;
+    totalKeystrokes: number;
 }
 
 interface ErrorMessage {
@@ -74,10 +80,20 @@ interface ErrorMessage {
     message: string
 }
 
+interface RematchMessage {
+    type: MessageType.REMATCH,
+    roomCode: string
+}
+
+interface RematchStartMessage {
+    type: MessageType.REMATCH_START;
+    passage: string
+}
+
 export type WebSocketMessage = ErrorMessage;
 
-export type ClientMessage = CreateRoomMessage | JoinRoomMessage | PlayerUpdateMessage | MatchFinishedMessage | StartMatchMessage;
+export type ClientMessage = CreateRoomMessage | JoinRoomMessage | PlayerUpdateMessage | MatchFinishedMessage | StartMatchMessage | RematchMessage;
 
-export type ServerMessage = RoomCreatedMessage | OpponentJoinedMessage | MatchStartedMessage | OpponentUpdateMessage | OpponentFinishedMessage
+export type ServerMessage = RoomCreatedMessage | OpponentJoinedMessage | MatchStartedMessage | OpponentUpdateMessage | OpponentFinishedMessage | RematchStartMessage;
 
 export { MessageType };
