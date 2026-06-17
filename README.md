@@ -1,38 +1,39 @@
 # TypeDuel ⌨️
- 
+
 A real-time competitive typing game. Two players race to type a passage with live WPM, accuracy tracking, and progress bars.
- 
+
 **Stack:** Vanilla TypeScript + HTML + CSS — strict MVC pattern  
 **Build tool:** Vite  
 **No frameworks, no AI layer**
- 
+
 ---
- 
+
 ## Features
- 
+
 - Live WPM & accuracy tracking
 - Single player mode with ghost opponent (Easy/Medium/Hard)
 - Multiplayer via WebSockets — create or join a room
 - Rematch flow
 - Match history
+
 ---
- 
+
 ## Getting Started
- 
+
 ```bash
 # Start the client
 npm install
 npm run dev
- 
+
 # Start the server
 cd server
 npx tsx src/index.ts
 ```
- 
+
 ---
- 
+
 ## Project Structure
- 
+
 ```
 typeduel/
 ├── index.html
@@ -64,13 +65,13 @@ typeduel/
         ├── passages.ts
         └── types.ts
 ```
- 
+
 ---
- 
+
 ## Architecture
- 
+
 ### MVC Breakdown
- 
+
 | Layer | File | Responsibility |
 |-------|------|----------------|
 | Model | `PlayerModel.ts` | Player identity, average WPM across matches |
@@ -79,20 +80,21 @@ typeduel/
 | View | `GameView.ts` | Typing UI, progress bars, countdown, lobby |
 | View | `ResultsView.ts` | Post-game screen, match history |
 | Controller | `GameController.ts` | Wires models ↔ views, handles input, WebSocket, ghost opponent |
- 
+
 ### Game Phases
- 
+
 `idle` → `countdown` → `playing` → `results`
- 
+
 ### Winner Criteria
- 
+
 1. Most input completed
 2. Least errors
 3. Highest WPM (tiebreaker)
+
 ---
- 
+
 ## Key Design Decisions
- 
+
 - **No frameworks** — vanilla TS to demonstrate MVC and DOM mastery
 - **Vite** for build tooling — ES modules, hot reload, zero config
 - **MatchModel** is a separate entity from GameModel — a game can have multiple matches
@@ -104,10 +106,11 @@ typeduel/
 - **Single player** — ghost opponent cursor moves at target WPM, no second client needed
 - **No localStorage** — match history lives in session only; no leaderboard persistence
 - **No real-time opponent stat syncing** — opponent progress only updated at match end
+
 ---
- 
+
 ## Progress
- 
+
 ### ✅ Done
 - [x] Project scaffolded (Vite + vanilla-ts template)
 - [x] Folder structure set up
@@ -125,8 +128,16 @@ typeduel/
 - [x] Single player mode — ghost opponent at Easy/Medium/Hard WPM
 - [x] Multiplayer — create/join room, start match, rematch, disconnect handling
 - [x] Match history per session
-- [x] Dead code removal — `player_update` / `opponent_update` types, dummy opponent stats fallback, debug `window.controller`
-- [x] JSDoc comments across all models, views, controller, and server files
+
+### ✅ Done (continued)
+- [x] Styles — dark theme, Space Grotesk + JetBrains Mono, animations, error states
+- [x] CSS split into `main.css`, `game.css`, `results.css`
+- [x] Input validation feedback — shake animation on empty fields
+- [x] Cursor character error highlight — red background on wrong key
+- [x] Loading screen with spinner during passage fetch
+- [x] Character spacing fix in passage — collapsed inline spans
+
 ### 📋 Pending
-- [ ] Styles
+- [ ] Deployment — client to Vercel/Netlify, server to Render/Railway
 - [ ] End-to-end testing
+- [ ] WebSocket URL update for production (`ws://localhost:8080` → `wss://...`)

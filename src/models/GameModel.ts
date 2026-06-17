@@ -45,7 +45,8 @@ class GameModel {
                 totalKeystrokes: 0,
                 errors: 0,
                 currentWpm: 0,
-                finalWpm: 0
+                finalWpm: 0,
+                hasError: false
             });
         }
         return player.player.id;
@@ -81,7 +82,8 @@ class GameModel {
                 totalKeystrokes: 0,
                 errors: 0,
                 currentWpm: 0,
-                finalWpm: 0
+                finalWpm: 0,
+                hasError: false
             })
         })
     }
@@ -98,9 +100,8 @@ class GameModel {
         return this._currentMatch?.getPlayer(playerId);
     }
 
-    updatePlayerStats(playerId: string, idx: number, keyStrokes: number, errorCount: number, currentWpm: number) {
-        const player = this._players.find(p => p.player.id === playerId);
-        this._currentMatch?.updatePlayerStats(playerId, idx, keyStrokes, errorCount, currentWpm);
+    updatePlayerStats(playerId: string, idx: number, keyStrokes: number, errorCount: number, currentWpm: number, hasError: boolean) {
+        this._currentMatch?.updatePlayerStats(playerId, idx, keyStrokes, errorCount, currentWpm, hasError);
     }
 
     updatePhase(phase: GamePhase) {

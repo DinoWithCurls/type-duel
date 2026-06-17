@@ -34,6 +34,7 @@ class GameController {
         this._resultsView.renderResults(playerStats);
         this._resultsView.onRematch(() => {
             if (this._isSinglePlayer) {
+                this._view.renderLoading();
                 this.createMatch();
                 this._socket?.send(JSON.stringify({
                     type: MessageType.CREATE_ROOM,
@@ -84,7 +85,8 @@ class GameController {
                             message.cursorIndex,
                             message.totalKeystrokes,
                             message.errors,
-                            message.finalWpm
+                            message.finalWpm,
+                            message.hasError
                         )
                     }
                     this.endMatch();
@@ -96,7 +98,7 @@ class GameController {
                     break;
             }
         }
-        this._view.renderHome();
+        this._view.renderHome(this._model.getResults().matchHistory.length > 0);
         this._view.onCreateMatch((name) => {
             this.addPlayer(name);
             this.createMatch();
@@ -113,12 +115,14 @@ class GameController {
             this._view.renderDifficulty();
             this._view.onDifficultySelect((targetWpm) => {
                 this._isSinglePlayer = true;
+                this._ghostWpm = targetWpm;
+                this._view.renderLoading();
                 this._socket?.send(JSON.stringify({
                     type: MessageType.CREATE_ROOM,
                     playerName: name,
                     singlePlayer: true
                 }));
-                this._ghostWpm = targetWpm;
+                
             });
         });
 
@@ -164,6 +168,7 @@ class GameController {
     /** Runs 3-2-1-Go sequence, then starts match, keystroke listener, timer interval, and ghost interval (single player only). */
     async startCountdown() {
         this._model.updatePhase('countdown');
+        this._view.renderLoading();
         for (let i = 3; i >= 0; i--) {
             this._view.renderCountdown(i);
             await sleep(1000);
@@ -197,7 +202,7 @@ class GameController {
                 );
                 const ghostId = this._model.getOpponentId(this._localPlayer);
                 if (ghostId) {
-                    this._model.updatePlayerStats(ghostId, ghostCursorIdx, 0, 0, this._ghostWpm!);
+                    this._model.updatePlayerStats(ghostId, ghostCursorIdx, 0, 0, this._ghostWpm!, false);
                 }
                 if (ghostCursorIdx >= passageLength) {
                     clearInterval(this._ghostInterval);
@@ -244,15 +249,19 @@ class GameController {
         let currErrorCount = currentPlayer.errors
         if (pressed == 'Backspace') {
             currCursorIdx--;
+            currentPlayer.hasError = false;
         } else if (passage[currCursorIdx] == pressed) {
             currCursorIdx++;
+            currentPlayer.hasError = false;
         } else {
             currErrorCount++;
+            currentPlayer.hasError = true;
+
         }
         const elapsed = this._model.getElapsedTime();
         const currWpm = elapsed > 0 ? (currCursorIdx / 5) / (elapsed / 60) : 0;
         newKeyCount++;
-        this._model.updatePlayerStats(this._localPlayer, Math.max(0, currCursorIdx), newKeyCount, currErrorCount, currWpm);
+        this._model.updatePlayerStats(this._localPlayer, Math.max(0, currCursorIdx), newKeyCount, currErrorCount, currWpm, currentPlayer.hasError);
         if (currCursorIdx == passage.length) {
             this.endMatch();
             return;

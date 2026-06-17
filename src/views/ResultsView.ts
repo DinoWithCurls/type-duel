@@ -43,24 +43,25 @@ class ResultsView {
             return p1.finalWpm >= p2.finalWpm ? p1 : p2;
         }
 
-        const getAccuracy = (p: PlayerResult) => p.totalKeystrokes > 0 ? Math.round(((p.totalKeystrokes - p.errorCount) / p.totalKeystrokes) * 100) : 0;
+        const getAccuracy = (p: PlayerResult) => {
+            if (p.name === 'Computer') return '—';
+            return p.totalKeystrokes > 0 ? Math.round(((p.totalKeystrokes - p.errorCount) / p.totalKeystrokes) * 100) + '%' : '0%';
+        }
 
         const winningPlayer = comparePlayers(player1, player2)
 
         this._root.innerHTML = `
-            <div id="match-result">
-                <h1>${isTie ? "It's a tie!!" : winningPlayer.name + " won!"}</h1>
+            <div id="match-result" class="screen results-screen">
+                <h1 class="winner-badge">${isTie ? "It's a tie!!" : winningPlayer.name + " won!"}</h1>
                 <h3>Stats</h3>
-                <div>
-                    ${player1.name} --  ${Math.round(player1.finalWpm)} WPM, ${player1.errorCount} errors, Accuracy: ${getAccuracy(player1)}
+                <div class="result-row ${!isTie && winningPlayer.id === player1.id ? 'winner' : ''}">
+                    ${player1.name} · ${Math.round(player1.finalWpm)} WPM · ${player1.errorCount} errors · ${getAccuracy(player1)} accuracy
                 </div>
-                <div>
-                    ${player2.name} -- ${Math.round(player2.finalWpm)} WPM, ${player2.errorCount} errors, Accuracy: ${getAccuracy(player2)}
+                <div class="result-row ${!isTie && winningPlayer.id === player2.id ? 'winner' : ''}">
+                    ${player2.name} · ${Math.round(player2.finalWpm)} WPM · ${player2.errorCount} errors · ${getAccuracy(player2)} accuracy
                 </div>
-            </div>
-            <div>
-                <button id="rematch-button">Want a rematch?</button>
-                <button id="view-history-button">View History</button>
+                <button id="rematch-button" class="btn btn-primary">Rematch</button>
+                <button id="view-history-button" class="btn btn-ghost">View History</button>
             </div>
         `;
     }
@@ -74,13 +75,13 @@ class ResultsView {
             const rows = matchHistory.map(match => `
                 <tr>
                     <td>${match.matchId}</td>
-                    <td>${match.players.map(p => `${p.name}: ${p.finalWpm} WPM`).join(' vs ')}</td>
+                    <td>${match.players.map(p => `${p.name}: ${Math.round(p.finalWpm)} WPM`).join(' vs ')}</td>
                 </tr>
             `).join('');
         
             this._root.innerHTML = `
-                <div>
-                    <button id="return-button">Go back</button>
+                <div class="screen history-screen">
+                    <button id="return-button" class="btn btn-link">Go back</button>
                     <h1>History</h1>
                     <table>
                         <tr>
