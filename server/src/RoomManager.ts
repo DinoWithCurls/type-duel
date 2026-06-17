@@ -7,6 +7,7 @@ export type Room = {
         ws: WebSocket,
         name: string
     }[];
+    rematchCount: number;
 
 }
 
@@ -18,7 +19,8 @@ class RoomManager {
         let room: Room = {
             status: 'waiting',
             code: code,
-            players: [{ws, name: playerName}]
+            players: [{ws, name: playerName}],
+            rematchCount: 0
         }
         this._rooms.set(code, room);
         return room;

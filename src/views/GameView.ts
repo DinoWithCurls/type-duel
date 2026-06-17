@@ -14,7 +14,11 @@ class GameView {
                 <h1>TypeDuel</h1>
                 <input id="player-name" type="text" placeholder="Enter your name" />
                 <button id="create-match">Create Match</button>
+                
                 <button id="view-history">View History</button>
+                <br>
+                <input id="room-code" type="text" placeholder="Enter room code" />
+                <button id="join-match">Join Match</button>
             </div>
         `
     }
@@ -25,6 +29,18 @@ class GameView {
             btn.onclick = () => {
                 if (!input.value.trim()) return;
                 callback(input.value)
+            }
+        }
+    }
+
+    onJoinMatch(callback: (name: string, roomCode: string) => void) {
+        const btn = this._root.querySelector('#join-match') as HTMLButtonElement;
+        const nameInput = this._root.querySelector('#player-name') as HTMLInputElement;
+        const roomCodeInput = this._root.querySelector('#room-code') as HTMLInputElement;
+        if (btn) {
+            btn.onclick = () => {
+                if (!nameInput.value.trim() || !roomCodeInput.value.trim()) return;
+                callback(nameInput.value, roomCodeInput.value)
             }
         }
     }
