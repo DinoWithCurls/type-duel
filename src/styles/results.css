@@ -1,0 +1,66 @@
+/* ─── Results Screen ─── */
+.results-screen {
+  animation: fadeIn 0.3s ease;
+}
+
+.winner-badge {
+  font-size: 26px;
+  font-weight: 500;
+  color: #a78bfa;
+  margin-bottom: 1.5rem;
+  animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-row {
+  background: #1a1d2e;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #9ca3af;
+  border: 0.5px solid rgba(255, 255, 255, 0.06);
+}
+
+.result-row.winner {
+  border-color: rgba(167, 139, 250, 0.35);
+  color: #e8eaf0;
+}
+
+/* ─── History Screen ─── */
+.history-screen h1 {
+  margin-bottom: 1.5rem;
+}
+
+.history-screen table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.history-screen th {
+  color: #6b7280;
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.06);
+  font-weight: 400;
+}
+
+.history-screen td {
+  padding: 10px 10px;
+  color: #9ca3af;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.04);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.history-screen td:first-child {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -34,6 +34,7 @@ class GameController {
         this._resultsView.renderResults(playerStats);
         this._resultsView.onRematch(() => {
             if (this._isSinglePlayer) {
+                this._view.renderLoading();
                 this.createMatch();
                 this._socket?.send(JSON.stringify({
                     type: MessageType.CREATE_ROOM,
@@ -114,12 +115,14 @@ class GameController {
             this._view.renderDifficulty();
             this._view.onDifficultySelect((targetWpm) => {
                 this._isSinglePlayer = true;
+                this._ghostWpm = targetWpm;
+                this._view.renderLoading();
                 this._socket?.send(JSON.stringify({
                     type: MessageType.CREATE_ROOM,
                     playerName: name,
                     singlePlayer: true
                 }));
-                this._ghostWpm = targetWpm;
+                
             });
         });
 
@@ -165,6 +168,7 @@ class GameController {
     /** Runs 3-2-1-Go sequence, then starts match, keystroke listener, timer interval, and ghost interval (single player only). */
     async startCountdown() {
         this._model.updatePhase('countdown');
+        this._view.renderLoading();
         for (let i = 3; i >= 0; i--) {
             this._view.renderCountdown(i);
             await sleep(1000);
