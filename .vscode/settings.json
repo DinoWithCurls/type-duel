@@ -1,0 +1,8 @@
+{
+    "workbench.colorTheme":"Cursor Dark",
+    "emmet.includeLanguages": {
+        "javascript": "html",
+        "typescript": "html",
+    },
+    "emmet.triggerExpansionOnTab": true
+}

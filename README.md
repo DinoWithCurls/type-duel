@@ -108,11 +108,18 @@ typeduel/
 
 ### ✅ Done (continued)
 - [x] `main.ts` — bootstraps app, wires Model, View, Controller together
+- [x] Bug fixes — button handlers, timer, typed/untyped split, cursor visibility, keystroke accumulation
+- [x] `server/src/types.ts` — WebSocket message types, client/server message unions
+- [x] `server/src/RoomManager.ts` — room creation, joining, lookup, removal, find by player
+- [x] `server/src/passages.ts` — fallback passages for server
+- [x] `server/src/index.ts` — WebSocket server, room management, passage fetch, disconnect handling
 
 ### 📋 Pending
+- [ ] WebSocket client integration in `GameController.ts`
+- [ ] Join room UI flow in `GameView.ts`
+- [ ] Remove `player_update` / `opponent_update` real-time stat syncing (deferred)
 - [ ] Styles
 - [ ] localStorage integration (leaderboard)
-- [ ] WebSocket integration (server + client)
 - [ ] Single player mode (ghost opponent)
 - [ ] Comments and code documentation
 - [ ] End-to-end testing
@@ -126,3 +133,9 @@ typeduel/
 - [ ] Build WebSocket server (`server/` folder) — room management, progress broadcast, finish detection
 - [ ] Add single player mode with ghost opponent
 - [ ] Add localStorage leaderboard
+
+## Temp Code (remove before production)
+
+- [ ] `main.ts` — `(window as any).controller = gameController` — exposes controller globally for console testing
+- [ ] `GameController.init()` — stubbed room code generation via `Math.random()` — replace with WebSocket server response
+- [ ] `GameController.handleKeystroke()` — opponent fallback uses local player stats when no opponent exists — remove when WebSocket is integrated
