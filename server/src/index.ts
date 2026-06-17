@@ -41,6 +41,10 @@ connection.on('connection', (ws: WebSocket) => {
             case 'create_room': {
                 const room = roomManager.createRoom(ws, message.playerName);
                 send(ws, { type: MessageType.ROOM_CREATED, roomCode: room.code })
+                if(message.singlePlayer) {
+                    const passage = await fetchPassage() ?? passages[0].text;
+                    send(ws, { type: MessageType.MATCH_STARTED, passage });
+                }
                 break;
             }
             case 'join_room': {

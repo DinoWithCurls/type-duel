@@ -17,6 +17,10 @@ class GameController {
     private _timerInterval: ReturnType<typeof setInterval> | null = null;
     private _socket: WebSocket | null = null;
     private _roomCode: string | null = null;
+    private _ghostWpm: number | null = null;
+    private _isSinglePlayer: boolean = false;
+    private _ghostInterval: ReturnType<typeof setInterval> | null = null;
+    
 
     constructor(model: GameModel, view: GameView, resultsView: ResultsView) {
         this._model = model;
@@ -27,10 +31,19 @@ class GameController {
     private showResults(playerStats: PlayerResult[], matchHistory: MatchHistory[]) {
         this._resultsView.renderResults(playerStats);
         this._resultsView.onRematch(() => {
-            this._socket?.send(JSON.stringify({
-                type: MessageType.REMATCH,
-                roomCode: this._roomCode
-            }))
+            if (this._isSinglePlayer) {
+                this.createMatch();
+                this._socket?.send(JSON.stringify({
+                    type: MessageType.CREATE_ROOM,
+                    playerName: this._localPlayer,
+                    singlePlayer: true
+                }));
+            } else {
+                this._socket?.send(JSON.stringify({
+                    type: MessageType.REMATCH,
+                    roomCode: this._roomCode
+                }))
+            }
         });
         this._resultsView.onViewHistory(() => {
             this._resultsView.renderHistory(matchHistory);
@@ -49,7 +62,9 @@ class GameController {
             switch (message.type) {
                 case MessageType.ROOM_CREATED:
                     this._roomCode = message.roomCode;
-                    this._view.renderLobby(message.roomCode);
+                    if (!this._isSinglePlayer) {
+                        this._view.renderLobby(message.roomCode);
+                    }
                     break;
                 case MessageType.OPPONENT_JOINED:
                     this.handleOpponentJoined(message.opponentName);
@@ -86,6 +101,22 @@ class GameController {
                 type: MessageType.CREATE_ROOM,
                 playerName: name
             }));
+        });
+
+        this._view.onSinglePlayer((name) => {
+            this.addPlayer('Computer');
+            this.addPlayer(name);
+            this.createMatch();
+            this._view.renderDifficulty();
+            this._view.onDifficultySelect((targetWpm) => {
+                this._isSinglePlayer = true;
+                this._socket?.send(JSON.stringify({
+                    type: MessageType.CREATE_ROOM,
+                    playerName: name,
+                    singlePlayer: true
+                }));
+                this._ghostWpm = targetWpm;
+            });
         });
 
         this._view.onJoinMatch((name, roomCode) => {
@@ -151,6 +182,24 @@ class GameController {
                 : { playerId: '', cursorIndex: 0, totalKeystrokes: 0, errors: 0, currentWpm: 0, finalWpm: 0 };
             if (localStats) this._view.updateMatch(localStats, opponentStats, timeRemaining);
         }, 1000);
+
+        if (this._isSinglePlayer && this._ghostWpm) {
+            const passageLength = passage.length;
+            this._ghostInterval = setInterval(() => {
+                const elapsed = this._model.getElapsedTime();
+                const ghostCursorIdx = Math.min(
+                    Math.floor((this._ghostWpm! / 60) * 5 * elapsed),
+                    passageLength
+                );
+                const ghostId = this._model.getOpponentId(this._localPlayer);
+                if (ghostId) {
+                    this._model.updatePlayerStats(ghostId, ghostCursorIdx, 0, 0, this._ghostWpm!);
+                }
+                if (ghostCursorIdx >= passageLength) {
+                    clearInterval(this._ghostInterval);
+                }
+            }, 100);
+        }
     }
 
 
@@ -159,6 +208,10 @@ class GameController {
         if (this._timerInterval) {
             clearInterval(this._timerInterval);
             this._timerInterval = null;
+        }
+        if(this._ghostInterval) {
+            clearInterval(this._ghostInterval);
+            this._ghostInterval = null;
         }
         const localStats = this._model.getPlayerStats(this._localPlayer);
         this._model.endMatch();
@@ -198,14 +251,9 @@ class GameController {
             this.endMatch();
             return;
         };
-        // TODO: Handle single player mode - ghost opponent
-        let opponentStats;
         const opponentId = this._model.getOpponentId(this._localPlayer);
-        if (opponentId) {
-            opponentStats = opponentStats = this._model.getPlayerStats(opponentId);
-        } else {
-            opponentStats = { playerId: '', cursorIndex: 0, totalKeystrokes: 0, errors: 0, currentWpm: 0, finalWpm: 0 };
-        }
+        const opponentStats = this._model.getPlayerStats(opponentId);
+        if (!opponentStats) return;
         this._view.updateMatch(
             this._model.getPlayerStats(this._localPlayer),
             opponentStats,
