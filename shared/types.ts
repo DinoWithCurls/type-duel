@@ -90,6 +90,12 @@ interface RematchStartMessage {
     passage: string
 }
 
+interface CreateRoomMessage {
+    type: MessageType.CREATE_ROOM;
+    playerName: string;
+    singlePlayer: boolean;
+}
+
 export type WebSocketMessage = ErrorMessage;
 
 export type ClientMessage = CreateRoomMessage | JoinRoomMessage | PlayerUpdateMessage | MatchFinishedMessage | StartMatchMessage | RematchMessage;

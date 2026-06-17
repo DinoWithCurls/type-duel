@@ -12,6 +12,7 @@ class GameView {
         this._root.innerHTML = `
             <div>
                 <h1>TypeDuel</h1>
+                <button id="single-player">Single Player</button>
                 <input id="player-name" type="text" placeholder="Enter your name" />
                 <button id="create-match">Create Match</button>
                 
@@ -22,6 +23,28 @@ class GameView {
             </div>
         `
     }
+
+    renderDifficulty() {
+        this._root.innerHTML = `
+            <div>
+                <h1>TypeDuel</h1>
+                <h3>Choose Difficulty</h3>
+                <button id="easy">Easy (30 WPM)</button>
+                <button id="medium">Medium (60 WPM)</button>
+                <button id="hard">Hard (100 WPM)</button>
+            </div>
+        `;
+    }
+
+    onDifficultySelect(callback: (targetWpm: number) => void) {
+        const easy = this._root.querySelector('#easy') as HTMLButtonElement;
+        const medium = this._root.querySelector('#medium') as HTMLButtonElement;
+        const hard = this._root.querySelector('#hard') as HTMLButtonElement;
+        if (easy) easy.onclick = () => callback(30);
+        if (medium) medium.onclick = () => callback(60);
+        if (hard) hard.onclick = () => callback(100);
+    }
+
     onCreateMatch(callback: (name: string) => void) {
         const btn = this._root.querySelector('#create-match') as HTMLButtonElement;
         const input = this._root.querySelector('#player-name') as HTMLInputElement;
@@ -45,6 +68,15 @@ class GameView {
         }
     }
 
+    onSinglePlayer(callback: (name: string) => void) {
+        const btn = this._root.querySelector('#single-player') as HTMLButtonElement;
+        const input = this._root.querySelector('#player-name') as HTMLInputElement;
+        if (btn) btn.onclick = () => {
+            if (!input.value.trim()) return;
+            callback(input.value)
+        };
+    }
+
     onStartMatch(callback: () => void) {
         const btn = this._root.querySelector('#start-match') as HTMLButtonElement;
         if (btn) {
@@ -62,7 +94,7 @@ class GameView {
     onKeystroke(callback: (e: KeyboardEvent) => void) {
         if (this._keystrokeHandler) {
             document.removeEventListener('keydown', this._keystrokeHandler);
-        } 
+        }
         this._keystrokeHandler = callback;
         document.addEventListener('keydown', this._keystrokeHandler);
     }
@@ -118,16 +150,16 @@ class GameView {
         `;
     }
 
-    updateMatch(localStats: MatchPlayer, opponentStats: MatchPlayer, timeRemaining: number) { 
+    updateMatch(localStats: MatchPlayer, opponentStats: MatchPlayer, timeRemaining: number) {
         const timeRemainingHTML = this._root.querySelector('#time-remaining-container');
         const localStatsHTML = this._root.querySelector('#local-stats');
         const opponentStatsHTML = this._root.querySelector('#opponent-stats');
         const cursorChar = this._root.querySelector('#cursor-char');
         const typed = this._root.querySelector('#typed');
         const untyped = this._root.querySelector('#untyped');
-        
-        if(!typed || !untyped || !localStatsHTML || !opponentStatsHTML || !timeRemainingHTML) return;
-        
+
+        if (!typed || !untyped || !localStatsHTML || !opponentStatsHTML || !timeRemainingHTML) return;
+
         typed.textContent = this._passage.slice(0, localStats.cursorIndex);
         cursorChar.textContent = this._passage[localStats.cursorIndex] ?? '';
         untyped.textContent = this._passage.slice(localStats.cursorIndex + 1);
@@ -137,7 +169,7 @@ class GameView {
             timeRemainingHTML.innerHTML = `${Math.round(timeRemaining)} seconds left`;
         } else {
             timeRemainingHTML.innerHTML = `Match over!`;
-        }   
+        }
     }
 }
 
