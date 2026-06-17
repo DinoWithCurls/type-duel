@@ -13,8 +13,6 @@ const init = () => {
   const gameController = new GameController(gameModel, gameView, resultsView);
 
   gameController.init();
-  (window as any).controller = gameController;
-  
 }
 
 init();

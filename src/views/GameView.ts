@@ -1,7 +1,10 @@
 import { type MatchPlayer } from "../models/MatchModel";
+/** Handles all DOM rendering for the game screens (home, lobby, difficulty, countdown, match). */
 class GameView {
     private _root: HTMLElement;
+    /** Stored to avoid reconstructing from DOM on every keystroke. */
     private _passage: string;
+    /** Stored so the old listener can be removed before adding a new one on rematch. */
     private _keystrokeHandler: ((e: KeyboardEvent) => void) | null = null;
 
     constructor(root: HTMLElement) {
@@ -150,6 +153,7 @@ class GameView {
         `;
     }
 
+    /** Lightweight DOM update called on every keystroke and timer tick — only updates dynamic elements, does not re-render. */
     updateMatch(localStats: MatchPlayer, opponentStats: MatchPlayer, timeRemaining: number) {
         const timeRemainingHTML = this._root.querySelector('#time-remaining-container');
         const localStatsHTML = this._root.querySelector('#local-stats');

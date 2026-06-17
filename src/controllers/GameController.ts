@@ -9,6 +9,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const ignoredKeyboardKeys = ['Shift', 'Control', 'Alt', 'Meta', 'Tab', 'CapsLock', 'Escape'];
 
+/** Wires GameModel and views together; handles WebSocket communication, keystroke processing, and ghost opponent logic. */
 class GameController {
     private _model: GameModel;
     private _view: GameView;
@@ -28,6 +29,7 @@ class GameController {
         this._resultsView = resultsView;
     }
 
+    /** Renders results screen and re-registers all button callbacks (rematch, history, back). */
     private showResults(playerStats: PlayerResult[], matchHistory: MatchHistory[]) {
         this._resultsView.renderResults(playerStats);
         this._resultsView.onRematch(() => {
@@ -53,6 +55,7 @@ class GameController {
         });
     }
 
+    /** Bootstraps the app — connects WebSocket, renders home screen, registers all callbacks. */
     init() {
         this._socket = new WebSocket('ws://localhost:8080');
         this._socket.onopen = () => console.log('WebSocket connected');
@@ -137,6 +140,7 @@ class GameController {
         });
     }
 
+    /** Called when server notifies opponent has joined — adds them to model, updates lobby UI. */
     handleOpponentJoined(opponentName: string) {
         this._model.addPlayer(opponentName);
         this._view.renderOpponentJoined(opponentName);
@@ -157,6 +161,7 @@ class GameController {
     }
 
 
+    /** Runs 3-2-1-Go sequence, then starts match, keystroke listener, timer interval, and ghost interval (single player only). */
     async startCountdown() {
         this._model.updatePhase('countdown');
         for (let i = 3; i >= 0; i--) {
@@ -177,9 +182,8 @@ class GameController {
             }
             const localStats = this._model.getPlayerStats(this._localPlayer);
             const opponentId = this._model.getOpponentId(this._localPlayer);
-            const opponentStats = opponentId
-                ? this._model.getPlayerStats(opponentId)
-                : { playerId: '', cursorIndex: 0, totalKeystrokes: 0, errors: 0, currentWpm: 0, finalWpm: 0 };
+            const opponentStats = this._model.getPlayerStats(opponentId);
+            if (!opponentStats) return;
             if (localStats) this._view.updateMatch(localStats, opponentStats, timeRemaining);
         }, 1000);
 
@@ -203,6 +207,7 @@ class GameController {
     }
 
 
+    /** Clears all intervals, finalizes match in model, notifies server, shows results. */
     endMatch() {
         if (!this._model.isMatchActive()) return;
         if (this._timerInterval) {
@@ -227,6 +232,7 @@ class GameController {
         this.showResults(results.playerStats, results.matchHistory);
     }
 
+    /** Processes each keypress — validates against passage, updates model, triggers view update. */
     handleKeystroke(key: KeyboardEvent) {
         if (!this._localPlayer) return
         const passage = this._model.getPassage();

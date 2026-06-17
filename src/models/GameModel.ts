@@ -20,6 +20,7 @@ export type PlayerResult = {
     cursorIndex: number;
     totalKeystrokes: number;
 }
+/** Top-level state manager — owns players, current match, match history, and game phase. */
 class GameModel {
     private _phase: GamePhase;
     private _players: PlayerModel[];
@@ -33,6 +34,7 @@ class GameModel {
         this._matchHistory = [];
     }
 
+    /** Creates a PlayerModel and adds it to the current match if one is active. */
     addPlayer(name: string) {
         let player = new PlayerModel(name);
         this._players.push(player);
@@ -54,6 +56,7 @@ class GameModel {
         this._currentMatch?.startMatch();
     }
 
+    /** Finalizes player stats, pushes match to history, and clears current match. */
     endMatch() {
         this._phase = 'results';
         this._players.forEach(player => {
@@ -67,6 +70,7 @@ class GameModel {
         this._currentMatch = null;
     }
 
+    /** Instantiates a new MatchModel and adds all current players to it. */
     createMatch() {
         this._currentMatch = new MatchModel();
         this._phase = 'countdown';
@@ -103,6 +107,7 @@ class GameModel {
         this._phase = phase;
     }
 
+    /** Returns player stats and match history in a clean shape for the view. */
     getResults() {
         if (this._matchHistory.length === 0) return { playerStats: [], matchHistory: []};
         const lastMatch = this._matchHistory[this._matchHistory.length - 1];
@@ -133,6 +138,7 @@ class GameModel {
         }
     }
 
+    /** Guard used to prevent double endMatch calls. */
     isMatchActive() {
         return this._currentMatch !== null;
     }

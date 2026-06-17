@@ -1,3 +1,4 @@
+/** WebSocket server entry point — handles all client messages and room lifecycle. */
 import { WebSocketServer, WebSocket } from 'ws';
 import RoomManager from './RoomManager.js';
 import { MessageType, WebSocketMessage, ClientMessage, ServerMessage } from '../../shared/types.js';
@@ -38,6 +39,7 @@ connection.on('connection', (ws: WebSocket) => {
     ws.on('message', async (data) => {
         const message = JSON.parse(data.toString());
         switch (message.type) {
+            // Creates a room for the player; if singlePlayer, skips waiting and immediately sends passage.
             case 'create_room': {
                 const room = roomManager.createRoom(ws, message.playerName);
                 send(ws, { type: MessageType.ROOM_CREATED, roomCode: room.code })
@@ -47,6 +49,7 @@ connection.on('connection', (ws: WebSocket) => {
                 }
                 break;
             }
+            // Adds second player to room; sends opponent_joined to both players.
             case 'join_room': {
                 const room = roomManager.getRoom(message.roomCode);
                 if (!room) {
@@ -59,6 +62,7 @@ connection.on('connection', (ws: WebSocket) => {
                 send(ws, { type: MessageType.OPPONENT_JOINED, opponentName: room.players[0].name })
                 break;
             }
+            // Fetches a passage and sends match_started to all players in the room.
             case 'start_match': {
                 const room = roomManager.getRoom(message.roomCode);
                 if (!room) {
@@ -71,6 +75,7 @@ connection.on('connection', (ws: WebSocket) => {
                 })
                 break;
             }
+            // Forwards finished player's final stats to the opponent as opponent_finished.
             case 'match_finished': {
                 const room = roomManager.getRoom(message.roomCode);
                 if (!room) return;
@@ -80,7 +85,7 @@ connection.on('connection', (ws: WebSocket) => {
                 room.status = 'ready';
                 break;
             }
-
+            // Tracks rematch consent; once both players agree, fetches new passage and sends rematch_start.
             case 'rematch': {
                 const room = roomManager.getRoom(message.roomCode);
                 if (!room) return;
@@ -98,7 +103,7 @@ connection.on('connection', (ws: WebSocket) => {
         }
     });
 
-    ws.on('close', async (data) => {
+    ws.on('close', async () => {
         const room = roomManager.getRoomByPlayer(ws);
         if (!room) return;
         const opponent = room.players.find(p => p.ws !== ws);
