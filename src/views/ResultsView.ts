@@ -1,5 +1,6 @@
 import { type MatchHistory, type PlayerResult } from "../models/GameModel";
 
+/** Handles post-match and history screens. */
 class ResultsView {
     private _root: HTMLElement | null = null;
 
@@ -28,6 +29,7 @@ class ResultsView {
         }
     }
 
+    /** Determines winner using priority criteria (cursorIndex → errors → WPM), calculates accuracy. */
     renderResults(playerStats: PlayerResult[]) {
         const [player1, player2] = playerStats;
         
@@ -63,8 +65,9 @@ class ResultsView {
         `;
     }
 
+    /** Renders past matches in a table; handles empty state. */
     renderHistory(matchHistory: MatchHistory[]) {
-        if(matchHistory.length == 0) {
+        if(matchHistory.length === 0) {
             this._root.innerHTML = 
             `<div>No games played yet!</div>`
         } else {

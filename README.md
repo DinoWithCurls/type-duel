@@ -125,14 +125,8 @@ typeduel/
 - [x] Single player mode — ghost opponent at Easy/Medium/Hard WPM
 - [x] Multiplayer — create/join room, start match, rematch, disconnect handling
 - [x] Match history per session
+- [x] Dead code removal — `player_update` / `opponent_update` types, dummy opponent stats fallback, debug `window.controller`
+- [x] JSDoc comments across all models, views, controller, and server files
 ### 📋 Pending
-- [ ] Remove dead code — `player_update` / `opponent_update` / `handleOpponentUpdate`
 - [ ] Styles
-- [ ] Comments and code documentation
 - [ ] End-to-end testing
----
- 
-## Temp Code (remove before production)
- 
-- [ ] `main.ts` — `(window as any).controller = gameController` — exposes controller globally for console testing
-- [ ] `GameController.handleKeystroke()` — opponent fallback dummy stats — remove when fully tested

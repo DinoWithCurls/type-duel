@@ -11,9 +11,11 @@ export type Room = {
 
 }
 
+/** Manages WebSocket rooms — each room holds two player connections and match state. */
 class RoomManager {
     private _rooms: Map<string, Room> = new Map();
 
+    /** Generates a random 6-char room code and initialises room with creator's connection. */
     createRoom(ws: WebSocket, playerName: string): Room {
         let code = Math.random().toString(36).substring(2, 8).toUpperCase();
         let room: Room = {
@@ -25,6 +27,7 @@ class RoomManager {
         this._rooms.set(code, room);
         return room;
     }
+    /** Adds second player to an existing room and sets status to ready. */
     joinRoom(roomCode: string, ws: WebSocket, playerName: string) {
         
         let activeRoom = this._rooms.get(roomCode);
@@ -39,6 +42,7 @@ class RoomManager {
         return this._rooms.delete(roomCode);
     }
 
+    /** Used for disconnect cleanup — finds which room a closing socket belongs to. */
     getRoomByPlayer(ws: WebSocket): Room | undefined {
         return Array.from(this._rooms.values()).find(
             room => room.players.some(p => p.ws === ws)

@@ -17,6 +17,7 @@ export type OpponentUpdate = {
 
 type MatchStatus = 'waiting' | 'ongoing' | 'finished';
 
+/** Represents a single match instance — owns passage text, per-player stats, and the timer. */
 class MatchModel {
     private _matchId: string;
     private _passageId: string = '';
@@ -33,12 +34,14 @@ class MatchModel {
         this._status = 'waiting';
     }
 
+    /** Calculates seconds left based on elapsed time since match start. */
     timeRemaining() {
         if (!this._startTime) return this._duration;
         let elapsed = (Date.now() - this._startTime) / 1000
         return Math.max(0, this._duration - elapsed);
     }
 
+    /** Sets start time and transitions match status to ongoing. */
     startMatch() {
         this._startTime = Date.now();
         this._status = 'ongoing';
@@ -57,6 +60,7 @@ class MatchModel {
         this._players.set(player.playerId, player);
     }
 
+    /** Called on every keystroke to update cursor position, keystrokes, errors, and WPM. */
     updatePlayerStats(playerId: string, idx: number, keyStrokes: number, errorCount: number, currentWpm: number) {
         const player = this._players.get(playerId);
         if (player) {
@@ -69,6 +73,7 @@ class MatchModel {
     getPlayer(playerId: string) {
         return this._players.get(playerId);
     }
+    /** Locks in final WPM at match end. */
     finalizePlayer(playerId: string, finalWpm: number) {
         const player = this._players.get(playerId);
         if (player) player.finalWpm = finalWpm;
@@ -82,6 +87,7 @@ class MatchModel {
         return this._players;
     }
 
+    /** Returns seconds elapsed since match started. */
     getElapsedTime() {
         if (!this._startTime) return 0;
         return (Date.now() - this._startTime) / 1000;

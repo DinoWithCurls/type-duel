@@ -1,3 +1,4 @@
+/** Tracks player identity and cumulative stats across multiple matches. */
 class PlayerModel {
     private _id: string;
     private _name: string;
@@ -19,6 +20,7 @@ class PlayerModel {
         }
     }
 
+    /** Called at end of each match to update running average WPM. */
     updateStats(currentWpm: number) {
         this._matchCount += 1;
         this._totalWpm += currentWpm;
