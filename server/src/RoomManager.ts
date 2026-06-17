@@ -36,6 +36,12 @@ class RoomManager {
     removeRoom(roomCode: string) {
         return this._rooms.delete(roomCode);
     }
+
+    getRoomByPlayer(ws: WebSocket): Room | undefined {
+        return Array.from(this._rooms.values()).find(
+            room => room.players.some(p => p.ws === ws)
+        );
+    }
 }
 
 export default RoomManager;

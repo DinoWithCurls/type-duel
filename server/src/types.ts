@@ -37,7 +37,8 @@ interface PlayerUpdateMessage extends PlayerUpdateType {
 }
 
 interface MatchFinishedMessage {
-    type: MessageType.MATCH_FINISHED
+    type: MessageType.MATCH_FINISHED,
+    roomCode: string;
 }
 
 interface RoomCreatedMessage {
@@ -56,8 +57,7 @@ interface MatchStartedMessage {
 }
 
 interface StartMatchMessage {
-    type: MessageType.START_MATCH,
-    passage: string,
+    type: MessageType.START_MATCH
 }
 
 interface OpponentUpdateMessage extends PlayerUpdateType {
@@ -65,7 +65,8 @@ interface OpponentUpdateMessage extends PlayerUpdateType {
 }
 
 interface OpponentFinishedMessage {
-    type: MessageType.OPPONENT_FINISHED
+    type: MessageType.OPPONENT_FINISHED,
+    opponentName: string
 }
 
 interface ErrorMessage {

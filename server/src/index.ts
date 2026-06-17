@@ -1,12 +1,11 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import RoomManager from './RoomManager.js';
 import { MessageType, WebSocketMessage, ClientMessage, ServerMessage } from './types.js';
-import {passages} from './passages.js';
+import { passages } from './passages.js';
 
 function send(ws: WebSocket, message: WebSocketMessage | ClientMessage | ServerMessage) {
     ws.send(JSON.stringify(message));
 }
-
 
 async function fetchPassage(retries: number = 3) {
     try {
@@ -52,8 +51,8 @@ connection.on('connection', (ws: WebSocket) => {
                 }
                 roomManager.joinRoom(room.code, ws, message.playerName);
 
-                send(room.players[0].ws, {type: MessageType.OPPONENT_JOINED,opponentName: message.playerName})
-                send(ws, {type: MessageType.OPPONENT_JOINED,opponentName: room.players[0].name})
+                send(room.players[0].ws, { type: MessageType.OPPONENT_JOINED, opponentName: message.playerName })
+                send(ws, { type: MessageType.OPPONENT_JOINED, opponentName: room.players[0].name })
                 break;
             }
             case 'start_match': {
@@ -64,10 +63,32 @@ connection.on('connection', (ws: WebSocket) => {
                 }
                 let passage = await fetchPassage() ?? passages[0].text;
                 room.players.forEach(player => {
-                    send(player.ws, {type: MessageType.MATCH_STARTED, passage});
+                    send(player.ws, { type: MessageType.MATCH_STARTED, passage });
                 })
                 break;
             }
+            case 'match_finished': {
+                const room = roomManager.getRoom(message.roomCode);
+                if (!room) {
+                    send(ws, { type: MessageType.ERROR, message: 'Room not found' });
+                    return;
+                }
+                const opponent = room.players.find(p => p.ws !== ws);
+                if (!opponent) return;
+
+                send(opponent.ws, { type: MessageType.OPPONENT_FINISHED, opponentName: opponent.name });
+                roomManager.removeRoom(message.roomCode);
+                break;
+            }
         }
+    });
+
+    ws.on('close', async (data) => {
+        const room = roomManager.getRoomByPlayer(ws);
+        if (!room) return;
+        const opponent = room.players.find(p => p.ws !== ws);
+        if (!opponent) return;
+        send(opponent.ws, { type: MessageType.MATCH_FINISHED, roomCode: room.code});
+        roomManager.removeRoom(room.code);
     })
 });
