@@ -98,7 +98,7 @@ class GameController {
                     break;
             }
         }
-        this._view.renderHome();
+        this._view.renderHome(this._model.getResults().matchHistory.length > 0);
         this._view.onCreateMatch((name) => {
             this.addPlayer(name);
             this.createMatch();

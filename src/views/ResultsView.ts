@@ -43,7 +43,10 @@ class ResultsView {
             return p1.finalWpm >= p2.finalWpm ? p1 : p2;
         }
 
-        const getAccuracy = (p: PlayerResult) => p.totalKeystrokes > 0 ? Math.round(((p.totalKeystrokes - p.errorCount) / p.totalKeystrokes) * 100) : 0;
+        const getAccuracy = (p: PlayerResult) => {
+            if (p.name === 'Computer') return '—';
+            return p.totalKeystrokes > 0 ? Math.round(((p.totalKeystrokes - p.errorCount) / p.totalKeystrokes) * 100) + '%' : '0%';
+        }
 
         const winningPlayer = comparePlayers(player1, player2)
 
@@ -52,10 +55,10 @@ class ResultsView {
                 <h1 class="winner-badge">${isTie ? "It's a tie!!" : winningPlayer.name + " won!"}</h1>
                 <h3>Stats</h3>
                 <div class="result-row ${!isTie && winningPlayer.id === player1.id ? 'winner' : ''}">
-                    ${player1.name} · ${Math.round(player1.finalWpm)} WPM · ${player1.errorCount} errors · ${getAccuracy(player1)}% accuracy
+                    ${player1.name} · ${Math.round(player1.finalWpm)} WPM · ${player1.errorCount} errors · ${getAccuracy(player1)} accuracy
                 </div>
                 <div class="result-row ${!isTie && winningPlayer.id === player2.id ? 'winner' : ''}">
-                    ${player2.name} · ${Math.round(player2.finalWpm)} WPM · ${player2.errorCount} errors · ${getAccuracy(player2)}% accuracy
+                    ${player2.name} · ${Math.round(player2.finalWpm)} WPM · ${player2.errorCount} errors · ${getAccuracy(player2)} accuracy
                 </div>
                 <button id="rematch-button" class="btn btn-primary">Rematch</button>
                 <button id="view-history-button" class="btn btn-ghost">View History</button>

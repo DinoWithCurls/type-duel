@@ -140,7 +140,7 @@ class GameView {
         }
     }
 
-    renderHome() {
+    renderHome(showHistory: boolean = false) {
         this._root.innerHTML = `
             <div class="screen home-screen">
                 <h1 class="logo">TypeDuel ⌨</h1>
@@ -158,7 +158,7 @@ class GameView {
                     <input id="room-code" type="text" placeholder="Enter room code" class="input-field" />
                 </div>
                 <button id="join-match" class="btn btn-ghost">Join Room</button>
-                <button id="view-history" class="btn btn-link">View History</button>
+                ${showHistory ? '<button id="view-history" class="btn btn-link">View History</button>' : ''}
             </div>
         `
     }
