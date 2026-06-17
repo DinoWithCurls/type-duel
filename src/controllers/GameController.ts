@@ -84,7 +84,8 @@ class GameController {
                             message.cursorIndex,
                             message.totalKeystrokes,
                             message.errors,
-                            message.finalWpm
+                            message.finalWpm,
+                            message.hasError
                         )
                     }
                     this.endMatch();
@@ -197,7 +198,7 @@ class GameController {
                 );
                 const ghostId = this._model.getOpponentId(this._localPlayer);
                 if (ghostId) {
-                    this._model.updatePlayerStats(ghostId, ghostCursorIdx, 0, 0, this._ghostWpm!);
+                    this._model.updatePlayerStats(ghostId, ghostCursorIdx, 0, 0, this._ghostWpm!, false);
                 }
                 if (ghostCursorIdx >= passageLength) {
                     clearInterval(this._ghostInterval);
@@ -244,15 +245,19 @@ class GameController {
         let currErrorCount = currentPlayer.errors
         if (pressed == 'Backspace') {
             currCursorIdx--;
+            currentPlayer.hasError = false;
         } else if (passage[currCursorIdx] == pressed) {
             currCursorIdx++;
+            currentPlayer.hasError = false;
         } else {
             currErrorCount++;
+            currentPlayer.hasError = true;
+
         }
         const elapsed = this._model.getElapsedTime();
         const currWpm = elapsed > 0 ? (currCursorIdx / 5) / (elapsed / 60) : 0;
         newKeyCount++;
-        this._model.updatePlayerStats(this._localPlayer, Math.max(0, currCursorIdx), newKeyCount, currErrorCount, currWpm);
+        this._model.updatePlayerStats(this._localPlayer, Math.max(0, currCursorIdx), newKeyCount, currErrorCount, currWpm, currentPlayer.hasError);
         if (currCursorIdx == passage.length) {
             this.endMatch();
             return;

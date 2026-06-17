@@ -5,6 +5,7 @@ export type MatchPlayer = {
     errors: number;
     currentWpm: number;
     finalWpm: number;
+    hasError: boolean;
 }
 
 export type OpponentUpdate = {
@@ -61,13 +62,14 @@ class MatchModel {
     }
 
     /** Called on every keystroke to update cursor position, keystrokes, errors, and WPM. */
-    updatePlayerStats(playerId: string, idx: number, keyStrokes: number, errorCount: number, currentWpm: number) {
+    updatePlayerStats(playerId: string, idx: number, keyStrokes: number, errorCount: number, currentWpm: number, hasError: boolean) {
         const player = this._players.get(playerId);
         if (player) {
             player.cursorIndex = idx;
             player.totalKeystrokes = keyStrokes;
             player.errors = errorCount;
             player.currentWpm = currentWpm;
+            player.hasError = hasError;
         }
     };
     getPlayer(playerId: string) {

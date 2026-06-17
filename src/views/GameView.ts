@@ -158,7 +158,7 @@ class GameView {
         const timeRemainingHTML = this._root.querySelector('#time-remaining-container');
         const localStatsHTML = this._root.querySelector('#local-stats');
         const opponentStatsHTML = this._root.querySelector('#opponent-stats');
-        const cursorChar = this._root.querySelector('#cursor-char');
+        const cursorChar = this._root.querySelector('#cursor-char') as HTMLElement;
         const typed = this._root.querySelector('#typed');
         const untyped = this._root.querySelector('#untyped');
 
@@ -166,6 +166,7 @@ class GameView {
 
         typed.textContent = this._passage.slice(0, localStats.cursorIndex);
         cursorChar.textContent = this._passage[localStats.cursorIndex] ?? '';
+        cursorChar.style.backgroundColor = localStats.hasError ? '#ff4444' : '#e0e0e0';
         untyped.textContent = this._passage.slice(localStats.cursorIndex + 1);
         localStatsHTML.innerHTML = `WPM: ${Math.round(localStats.currentWpm)} | Errors: ${localStats.errors}`;
         opponentStatsHTML.innerHTML = `Opponent WPM: ${Math.round(opponentStats.currentWpm)} | Progress: ${opponentStats.cursorIndex} chars`;
