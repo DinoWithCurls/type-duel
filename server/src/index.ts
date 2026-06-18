@@ -4,6 +4,11 @@ import RoomManager from './RoomManager.js';
 import { MessageType, WebSocketMessage, ClientMessage, ServerMessage } from '../../shared/types.js';
 import { passages } from './passages.js';
 
+
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+const connection = new WebSocketServer({port: PORT});
+console.log(`server running on port ${PORT}`);
+
 function send(ws: WebSocket, message: WebSocketMessage | ClientMessage | ServerMessage) {
     ws.send(JSON.stringify(message));
 }
@@ -31,8 +36,6 @@ async function fetchPassage(retries: number = 6) {
     }
 }
 
-const connection = new WebSocketServer({ port: 8080 });
-console.log('server running on port 8080');
 const roomManager = new RoomManager();
 
 connection.on('connection', (ws: WebSocket) => {
