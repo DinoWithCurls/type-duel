@@ -8,7 +8,9 @@ function send(ws: WebSocket, message: WebSocketMessage | ClientMessage | ServerM
     ws.send(JSON.stringify(message));
 }
 
-async function fetchPassage(retries: number = 3) {
+const isTypeable = (text: string) => /^[\x20-\x7E]+$/.test(text);
+
+async function fetchPassage(retries: number = 6) {
     try {
         if (retries === 0) {
             throw new Error('max retries reached, falling back to local passages');
@@ -17,7 +19,7 @@ async function fetchPassage(retries: number = 3) {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const finResponse: any = await response.json();
-        if (finResponse.extract.length < 100 || finResponse.extract.length > 500) {
+        if (finResponse.extract.length < 100 || finResponse.extract.length > 500 || !isTypeable(finResponse)) {
             await fetchPassage(retries - 1);
         }
         else {
@@ -25,9 +27,7 @@ async function fetchPassage(retries: number = 3) {
         }
     } catch (err) {
         console.error(err);
-        let randomIdx = Math.floor(Math.random() * passages.length);
-        let passage = passages[randomIdx];
-        return passage.text;
+        return passages[Math.floor(Math.random() * passages.length)].text;
     }
 }
 
