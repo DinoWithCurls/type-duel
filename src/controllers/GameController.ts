@@ -58,7 +58,7 @@ class GameController {
 
     /** Bootstraps the app — connects WebSocket, renders home screen, registers all callbacks. */
     init() {
-        this._socket = new WebSocket('ws://localhost:8080');
+        this._socket = new WebSocket(import.meta.env.VITE_WS_URL || 'ws://localhost:8080');
         this._socket.onopen = () => console.log('WebSocket connected');
         this._socket.onerror = (e) => console.error('websocket error: ', e);
         this._socket.onmessage = (event) => {

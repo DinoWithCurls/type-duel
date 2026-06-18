@@ -4,11 +4,18 @@ import RoomManager from './RoomManager.js';
 import { MessageType, WebSocketMessage, ClientMessage, ServerMessage } from '../../shared/types.js';
 import { passages } from './passages.js';
 
+
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8080;
+const connection = new WebSocketServer({port: PORT});
+console.log(`server running on port ${PORT}`);
+
 function send(ws: WebSocket, message: WebSocketMessage | ClientMessage | ServerMessage) {
     ws.send(JSON.stringify(message));
 }
 
-async function fetchPassage(retries: number = 3) {
+const isTypeable = (text: string) => /^[\x20-\x7E]+$/.test(text);
+
+async function fetchPassage(retries: number = 6) {
     try {
         if (retries === 0) {
             throw new Error('max retries reached, falling back to local passages');
@@ -17,7 +24,7 @@ async function fetchPassage(retries: number = 3) {
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const finResponse: any = await response.json();
-        if (finResponse.extract.length < 100 || finResponse.extract.length > 500) {
+        if (finResponse.extract.length < 100 || finResponse.extract.length > 500 || !isTypeable(finResponse)) {
             await fetchPassage(retries - 1);
         }
         else {
@@ -25,14 +32,10 @@ async function fetchPassage(retries: number = 3) {
         }
     } catch (err) {
         console.error(err);
-        let randomIdx = Math.floor(Math.random() * passages.length);
-        let passage = passages[randomIdx];
-        return passage.text;
+        return passages[Math.floor(Math.random() * passages.length)].text;
     }
 }
 
-const connection = new WebSocketServer({ port: 8080 });
-console.log('server running on port 8080');
 const roomManager = new RoomManager();
 
 connection.on('connection', (ws: WebSocket) => {
