@@ -47,6 +47,13 @@ class MatchModel {
         this._startTime = Date.now();
         this._status = 'ongoing';
     }
+    getPassageId() {
+        return this._passageId;
+    }
+
+    getStatus() {
+        return this._status;
+    }
 
     setPassage(id: string, text: string) {
         this._passageId = id;
@@ -62,7 +69,8 @@ class MatchModel {
     }
 
     /** Called on every keystroke to update cursor position, keystrokes, errors, and WPM. */
-    updatePlayerStats(playerId: string, idx: number, keyStrokes: number, errorCount: number, currentWpm: number, hasError: boolean) {
+    updatePlayerStats(playerId: string | null, idx: number, keyStrokes: number, errorCount: number, currentWpm: number, hasError: boolean) {
+        if (playerId === null) return;
         const player = this._players.get(playerId);
         if (player) {
             player.cursorIndex = idx;
@@ -72,7 +80,8 @@ class MatchModel {
             player.hasError = hasError;
         }
     };
-    getPlayer(playerId: string) {
+    getPlayer(playerId: string | null) {
+        if (playerId === null) return undefined;
         return this._players.get(playerId);
     }
     /** Locks in final WPM at match end. */

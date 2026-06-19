@@ -34,6 +34,10 @@ class GameModel {
         this._matchHistory = [];
     }
 
+    getPhase() {
+        return this._phase;
+    }
+
     /** Creates a PlayerModel and adds it to the current match if one is active. */
     addPlayer(name: string) {
         let player = new PlayerModel(name);
@@ -96,11 +100,11 @@ class GameModel {
         return this._currentMatch?.getPassage();
     }
 
-    getPlayerStats(playerId: string) {
+    getPlayerStats(playerId: string | null) {
         return this._currentMatch?.getPlayer(playerId);
     }
 
-    updatePlayerStats(playerId: string, idx: number, keyStrokes: number, errorCount: number, currentWpm: number, hasError: boolean) {
+    updatePlayerStats(playerId: string | null, idx: number, keyStrokes: number, errorCount: number, currentWpm: number, hasError: boolean) {
         this._currentMatch?.updatePlayerStats(playerId, idx, keyStrokes, errorCount, currentWpm, hasError);
     }
 
@@ -152,7 +156,7 @@ class GameModel {
         return this._currentMatch?.timeRemaining();
     }
 
-    getOpponentId(localPlayerId: string) {
+    getOpponentId(localPlayerId: string | null) {
         return this._players.find(p => p.player.id != localPlayerId)?.player.id ?? null;
     }
 }

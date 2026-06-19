@@ -2,7 +2,7 @@ import { type MatchHistory, type PlayerResult } from "../models/GameModel";
 
 /** Handles post-match and history screens. */
 class ResultsView {
-    private _root: HTMLElement | null = null;
+    private _root: HTMLElement;
 
     constructor(root: HTMLElement) {
         this._root = root;

@@ -3,7 +3,7 @@ import { type MatchPlayer } from "../models/MatchModel";
 class GameView {
     private _root: HTMLElement;
     /** Stored to avoid reconstructing from DOM on every keystroke. */
-    private _passage: string;
+    private _passage: string = '';
     /** Stored so the old listener can be removed before adding a new one on rematch. */
     private _keystrokeHandler: ((e: KeyboardEvent) => void) | null = null;
 

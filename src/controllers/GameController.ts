@@ -15,12 +15,12 @@ class GameController {
     private _view: GameView;
     private _resultsView: ResultsView;
     private _localPlayer: string | null = null;
-    private _timerInterval: ReturnType<typeof setInterval> | null = null;
+    private _timerInterval: ReturnType<typeof setInterval> | undefined = undefined;
     private _socket: WebSocket | null = null;
     private _roomCode: string | null = null;
     private _ghostWpm: number | null = null;
     private _isSinglePlayer: boolean = false;
-    private _ghostInterval: ReturnType<typeof setInterval> | null = null;
+    private _ghostInterval: ReturnType<typeof setInterval> | undefined = undefined;
     
 
     constructor(model: GameModel, view: GameView, resultsView: ResultsView) {
@@ -175,11 +175,16 @@ class GameController {
         }
         this._model.startMatch();
         const passage = this._model.getPassage();
+        if (passage === undefined) {
+            console.error('No passage set before countdown started');
+            return;
+        }
         this._view.renderMatch(passage);
         this._view.onKeystroke(e => this.handleKeystroke(e));
 
         this._timerInterval = setInterval(() => {
             const timeRemaining = this._model.getTimeRemaining();
+            if (timeRemaining === undefined) return;
             if (timeRemaining <= 0) {
                 clearInterval(this._timerInterval);
                 this.endMatch();
@@ -217,21 +222,23 @@ class GameController {
         if (!this._model.isMatchActive()) return;
         if (this._timerInterval) {
             clearInterval(this._timerInterval);
-            this._timerInterval = null;
+            this._timerInterval = undefined;
         }
         if(this._ghostInterval) {
             clearInterval(this._ghostInterval);
-            this._ghostInterval = null;
+            this._ghostInterval = undefined;
         }
-        const localStats = this._model.getPlayerStats(this._localPlayer);
+        const localStats = this._model.getPlayerStats(this._localPlayer) ?? {
+            cursorIndex: 0, totalKeystrokes: 0, errors: 0, currentWpm: 0, finalWpm: 0, hasError: false, playerId: ''
+        };
         this._model.endMatch();
         this._socket?.send(JSON.stringify({
             type: MessageType.MATCH_FINISHED,
             roomCode: this._roomCode,
-            finalWpm: localStats.currentWpm ?? 0, 
-            cursorIndex: localStats.cursorIndex ?? 0,
-            errors: localStats.errors ?? 0,
-            totalKeystrokes: localStats.totalKeystrokes ?? 0
+            finalWpm: localStats.currentWpm,
+            cursorIndex: localStats.cursorIndex,
+            errors: localStats.errors,
+            totalKeystrokes: localStats.totalKeystrokes
         }))
         const results = this._model.getResults();
         this.showResults(results.playerStats, results.matchHistory);
@@ -241,27 +248,29 @@ class GameController {
     handleKeystroke(key: KeyboardEvent) {
         if (!this._localPlayer) return
         const passage = this._model.getPassage();
+        if (!passage) return;
         const pressed = key.key;
-        let currentPlayer = this._model.getPlayerStats(this._localPlayer);
+        const currentPlayer = this._model.getPlayerStats(this._localPlayer);
+        if (!currentPlayer) return;
         if (ignoredKeyboardKeys.includes(pressed)) return;
         let newKeyCount = currentPlayer.totalKeystrokes;
         let currCursorIdx = currentPlayer.cursorIndex;
-        let currErrorCount = currentPlayer.errors
+        let currErrorCount = currentPlayer.errors;
+        let hasError = currentPlayer.hasError;
         if (pressed == 'Backspace') {
             currCursorIdx--;
-            currentPlayer.hasError = false;
+            hasError = false;
         } else if (passage[currCursorIdx] == pressed) {
             currCursorIdx++;
-            currentPlayer.hasError = false;
+            hasError = false;
         } else {
             currErrorCount++;
-            currentPlayer.hasError = true;
-
+            hasError = true;
         }
         const elapsed = this._model.getElapsedTime();
         const currWpm = elapsed > 0 ? (currCursorIdx / 5) / (elapsed / 60) : 0;
         newKeyCount++;
-        this._model.updatePlayerStats(this._localPlayer, Math.max(0, currCursorIdx), newKeyCount, currErrorCount, currWpm, currentPlayer.hasError);
+        this._model.updatePlayerStats(this._localPlayer, Math.max(0, currCursorIdx), newKeyCount, currErrorCount, currWpm, hasError);
         if (currCursorIdx == passage.length) {
             this.endMatch();
             return;
@@ -269,11 +278,11 @@ class GameController {
         const opponentId = this._model.getOpponentId(this._localPlayer);
         const opponentStats = this._model.getPlayerStats(opponentId);
         if (!opponentStats) return;
-        this._view.updateMatch(
-            this._model.getPlayerStats(this._localPlayer),
-            opponentStats,
-            this._model.getTimeRemaining()
-        )
+        const updatedPlayer = this._model.getPlayerStats(this._localPlayer);
+        if (!updatedPlayer) return;
+        const timeRemaining = this._model.getTimeRemaining();
+        if (timeRemaining === undefined) return;
+        this._view.updateMatch(updatedPlayer, opponentStats, timeRemaining)
     }
 
     getResults() {
