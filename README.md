@@ -1,34 +1,59 @@
 # TypeDuel ⌨️
 
-A real-time competitive typing game. Two players race to type a passage with live WPM, accuracy tracking, and progress bars.
+A real-time competitive typing game. Race an opponent — or a ghost — to type a passage with live WPM and accuracy tracking.
 
-**Stack:** Vanilla TypeScript + HTML + CSS — strict MVC pattern  
-**Build tool:** Vite  
-**No frameworks, no AI layer**
+**Stack:** Vanilla TypeScript + HTML + CSS, strict MVC pattern, Vite, WebSockets  
+**No frameworks**
 
 ---
 
 ## Features
 
-- Live WPM & accuracy tracking
-- Single player mode with ghost opponent (Easy/Medium/Hard)
-- Multiplayer via WebSockets — create or join a room
-- Rematch flow
-- Match history
+- Real-time multiplayer via WebSockets — create or join a room
+- Single player mode with a ghost opponent (Easy / Medium / Hard)
+- Live WPM, accuracy, and error tracking
+- Match history and rematch flow
+- Dark theme with animated feedback
 
 ---
 
 ## Getting Started
 
 ```bash
-# Start the client
+# Client
 npm install
 npm run dev
 
-# Start the server
+# Server (separate terminal)
 cd server
-npx tsx src/index.ts
+npm install
+npm run dev
 ```
+
+Production build:
+```bash
+npm run build        # client
+cd server && npm run build && npm start
+```
+
+---
+
+## Architecture
+
+| Layer | File | Responsibility |
+|-------|------|----------------|
+| Model | `PlayerModel.ts` | Player identity, average WPM across matches |
+| Model | `MatchModel.ts` | Single match — passage, player stats, timer |
+| Model | `GameModel.ts` | App state — phase, players, current match, history |
+| View | `GameView.ts` | Home, lobby, difficulty, countdown, match screens |
+| View | `ResultsView.ts` | Results and history screens |
+| Controller | `GameController.ts` | Wires models to views, WebSocket communication, ghost opponent logic |
+
+Game phases: `idle → countdown → playing → results`
+
+Winner is decided by: most input completed → least errors → highest WPM (tiebreaker).
+
+Passages are fetched server-side from the Wikipedia REST API, filtered to 100–500 characters and ASCII-only, with a local fallback list if fetching fails.
 
 ---
 
@@ -36,108 +61,20 @@ npx tsx src/index.ts
 
 ```
 typeduel/
-├── index.html
-├── package.json
-├── vite.config.ts
-├── shared/
-│   └── types.ts          # Shared WebSocket message types
+├── shared/types.ts        # WebSocket message types, shared by client + server
 ├── src/
-│   ├── main.ts
-│   ├── models/
-│   │   ├── PlayerModel.ts
-│   │   ├── MatchModel.ts
-│   │   └── GameModel.ts
-│   ├── views/
-│   │   ├── GameView.ts
-│   │   └── ResultsView.ts
-│   ├── controllers/
-│   │   └── GameController.ts
-│   ├── data/
-│   │   └── passages.ts
-│   └── styles/
-│       ├── main.css
-│       ├── game.css
-│       └── results.css
+│   ├── models/            # PlayerModel, MatchModel, GameModel
+│   ├── views/              # GameView, ResultsView
+│   ├── controllers/        # GameController
+│   ├── data/passages.ts    # fallback passages
+│   └── styles/             # main.css, game.css, results.css
 └── server/
     └── src/
-        ├── index.ts
+        ├── index.ts        # WebSocket server
         ├── RoomManager.ts
-        ├── passages.ts
-        └── types.ts
+        └── passages.ts
 ```
 
 ---
 
-## Architecture
-
-### MVC Breakdown
-
-| Layer | File | Responsibility |
-|-------|------|----------------|
-| Model | `PlayerModel.ts` | Player identity, average WPM across matches |
-| Model | `MatchModel.ts` | Single match instance — passage, player stats, timer |
-| Model | `GameModel.ts` | App-level state — phase, players, current match, history |
-| View | `GameView.ts` | Typing UI, progress bars, countdown, lobby |
-| View | `ResultsView.ts` | Post-game screen, match history |
-| Controller | `GameController.ts` | Wires models ↔ views, handles input, WebSocket, ghost opponent |
-
-### Game Phases
-
-`idle` → `countdown` → `playing` → `results`
-
-### Winner Criteria
-
-1. Most input completed
-2. Least errors
-3. Highest WPM (tiebreaker)
-
----
-
-## Key Design Decisions
-
-- **No frameworks** — vanilla TS to demonstrate MVC and DOM mastery
-- **Vite** for build tooling — ES modules, hot reload, zero config
-- **MatchModel** is a separate entity from GameModel — a game can have multiple matches
-- **PlayerModel** holds persistent stats (averageWPM) across matches; per-match stats live in MatchModel
-- **WPM** is computed on the fly during a match, stored as `finalWpm` when match ends
-- **Corrected errors not tracked** — backspace penalty is already reflected in WPM naturally
-- **Passage fetched server-side** — Wikipedia REST API, filtered to 100–500 chars, falls back to local passages
-- **Networked multiplayer via WebSockets** — server handles room management, passage fetch, match coordination
-- **Single player** — ghost opponent cursor moves at target WPM, no second client needed
-- **No localStorage** — match history lives in session only; no leaderboard persistence
-- **No real-time opponent stat syncing** — opponent progress only updated at match end
-
----
-
-## Progress
-
-### ✅ Done
-- [x] Project scaffolded (Vite + vanilla-ts template)
-- [x] Folder structure set up
-- [x] `passages.ts` — fallback passage data
-- [x] `PlayerModel.ts` — id, name, averageWpm, updateStats()
-- [x] `MatchModel.ts` — matchId, passage, player stats map, timer, elapsedTime
-- [x] `GameModel.ts` — phases, players, match lifecycle, getResults()
-- [x] `GameController.ts` — match flow, keystroke handling, WebSocket, ghost opponent
-- [x] `GameView.ts` — home, lobby, difficulty, countdown, match screens
-- [x] `ResultsView.ts` — results screen, history, rematch, back navigation
-- [x] `main.ts` — bootstraps app, wires Model, View, Controller
-- [x] `shared/types.ts` — WebSocket message types shared between client and server
-- [x] `server/src/index.ts` — WebSocket server, room management, passage fetch, disconnect
-- [x] `server/src/RoomManager.ts` — room creation, joining, lookup, removal
-- [x] Single player mode — ghost opponent at Easy/Medium/Hard WPM
-- [x] Multiplayer — create/join room, start match, rematch, disconnect handling
-- [x] Match history per session
-
-### ✅ Done (continued)
-- [x] Styles — dark theme, Space Grotesk + JetBrains Mono, animations, error states
-- [x] CSS split into `main.css`, `game.css`, `results.css`
-- [x] Input validation feedback — shake animation on empty fields
-- [x] Cursor character error highlight — red background on wrong key
-- [x] Loading screen with spinner during passage fetch
-- [x] Character spacing fix in passage — collapsed inline spans
-
-### 📋 Pending
-- [ ] Deployment — client to Vercel/Netlify, server to Render/Railway
-- [ ] End-to-end testing
-- [ ] WebSocket URL update for production (`ws://localhost:8080` → `wss://...`)
+**Live:** client on Vercel · server on Render
